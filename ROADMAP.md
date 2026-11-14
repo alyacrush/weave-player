@@ -19,10 +19,10 @@ TODO = not implemented; BLOCKED = named dependency required.
 | P12 | Firefox stability matrix | REVIEW | Checkpoint user-tested; new development changes pending |
 | P13 | Mozilla submission | BLOCKED | P11/P12, publisher setup and review |
 | P14 | Chrome Manifest V3 port | TODO | Separate browser adapter and compatibility matrix |
-| P15 | Proxy feasibility experiment | TODO | User-provided/approved proxy and measurable quality difference |
+| P15 | Proxy feasibility experiment | REVIEW | Matched comparison prepared in docs/PROXY-QUALITY-TEST.md; live results pending |
 | P16 | Proxy implementation | BLOCKED | P15; permission/privacy/licensing decisions |
 | P17 | Chrome store release | BLOCKED | P14 and release-policy checks |
-| P18 | Cursor-positioned player context menu | TODO | Schedule with proxy work (P15/P16); see docs/UI-BACKLOG.md |
+| P18 | Cursor-positioned player context menu | DONE | Implemented in 2026.11.14.2; close animation corrected in 2026.11.14.3 |
 
 Work in small commits. Keep automated, maintainer-observed and untested outcomes
 separate. Retain the fMP4 checkpoint. Do not mark a task complete merely because
