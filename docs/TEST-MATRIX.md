@@ -17,4 +17,5 @@
 | Browser MediaSource automation | Host denied browser launch | BLOCKED locally |
 | Hosted GitHub CI | Run 43581343611, checks and artifact upload | PASS |
 | Chrome | Not ported | NOT SUPPORTED |
-| Embedded chat investigation | Owner reports chat works; mode, Firefox version and header observations unspecified | PASS reported; scope to confirm |
+| Production embedded chat | Owner confirms Weave 2026.11.14.1 (header rewriting still enabled) | PASS reported |
+| Isolated direct chat embedding | Owner screenshots: Firefox 144.0, popout / extension-hostname / localhost | All three BLOCKED by framing restrictions |

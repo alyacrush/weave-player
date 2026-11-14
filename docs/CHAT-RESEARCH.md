@@ -1,8 +1,8 @@
 # Embedded chat investigation — 2026-11-14
 
-Status: owner reports embedded chat works (2026-11-14); exact probe mode and
-header observations not yet supplied. Do not infer all three modes passed or
-that production header interception can already be removed.
+Status: all three direct-embedding probe modes blocked in owner screenshots,
+Firefox 144.0, 2026-11-14. Earlier success referred to production Weave 2026.11.14.1,
+which still rewrites response headers; it was not a successful isolated probe.
 The owner prefers retaining chat beside the player. No production playback or chat
 code was changed by this investigation. Store readiness is NOT established.
 
@@ -93,3 +93,26 @@ This verifies the read-only observer and message routing, not browser rendering.
 - https://github.com/w3c/webextensions/issues/483
 - https://bugzilla.mozilla.org/show_bug.cgi?id=1595652 (historical only)
 - https://bugzilla.mozilla.org/show_bug.cgi?id=1619338 (historical only)
+
+## Owner probe results (2026-11-14)
+
+Three supplied screenshots show the Firefox blocked-embedding page, HTTP 200,
+and no document-ready observation for each mode, using channel zizaran:
+
+| Mode | Observed response header | Visible result |
+|---|---|---|
+| popout | X-Frame-Options: SAMEORIGIN | Blocked |
+| embed with extension hostname | CSP frame-ancestors https://<extension-UUID> | Blocked; HTTPS does not match moz-extension scheme |
+| embed with localhost | CSP frame-ancestors http://localhost:* https://localhost:* | Blocked; neither matches extension origin |
+
+The extension UUID is intentionally omitted. These results reject the three
+specific tested configurations, not every possible architecture or browser version.
+No further repetitions of these same tests are needed. Production playback and
+chat must remain unchanged until a replacement passes integration tests.
+
+Next investigation: put the Weave player on the Twitch channel page alongside
+native chat, with no response-header rewriting. This remains an unproven prototype
+path. First establish the extension-frame/API/message boundary, existing player
+startup restrictions and original-video lifecycle. Do not expose credentials to
+page scripts or assume that adding player.html to web_accessible_resources alone
+makes the integration functional or safe.
