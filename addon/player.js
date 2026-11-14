@@ -341,64 +341,36 @@ const м_Отладка = (() => {
 		});
 	}
 	function ПоказатьИОтправитьОтчет(оОтчет, буфОтправить) {
-		ПоказатьСтраницу().then(оДокумент => {
-			let узФорма;
-			if (оОтчет.ПричинаЗавершенияРаботы === 'ОТПРАВИТЬ ОТЗЫВ') {
-				узФорма = оДокумент.getElementById('отладка-отзыв');
-			} else {
-				узФорма = оДокумент.getElementById('отладка-ошибка');
-				ВставитьСсылкиДляСкачиванияФайлов(узФорма);
-			}
-			узФорма.elements['отладка-отчет'].value = JSON.stringify(оОтчет);
-			ПоказатьФорму(оДокумент, узФорма.id, true);
-			оДокумент.addEventListener('reset', оСобытие => {
-				оСобытие.preventDefault();
-				window.location.reload(true);
-			});
-			let оЗапрос, оДанные, чКод;
-			оДокумент.addEventListener('submit', оСобытие => {
-				оСобытие.preventDefault();
-				if (оСобытие.target.id === 'отладка-идетотправка') {
-					чКод = 200;
-					оЗапрос.abort();
-					return;
-				}
-				оДокумент.getElementById('отладка-ходотправки').value = 0;
-				ПоказатьФорму(оДокумент, 'отладка-идетотправка', false);
-				чКод = 0;
-				if (!оЗапрос) {
-					оЗапрос = new XMLHttpRequest();
-					оЗапрос.upload.addEventListener('progress', оСобытие => {
-						оДокумент.getElementById('отладка-ходотправки').value = оСобытие.loaded / оСобытие.total;
-					});
-					оЗапрос.addEventListener('load', () => {
-						чКод = оЗапрос.status;
-					});
-					оЗапрос.addEventListener('loadend', () => {
-						if (чКод >= 200 && чКод <= 299) {
-							window.location.reload(true);
-						} else if (чКод === 474) {
-							показатьФорму('отладка-браузерустарел', true);
-						} else if (чКод >= 400 && чКод <= 499) {
-							ПоказатьФорму(оДокумент, 'отладка-версияустарела', true);
-						} else {
-							ПоказатьФорму(оДокумент, 'отладка-сбойотправки', true);
-						}
-					});
-					оДанные = new FormData(узФорма);
-					if (буфОтправить) {
-						оДанные.append('отладка-транспортныйпоток-0', new Blob([ буфОтправить ], {
-							type: 'video/mp2t'
-						}));
-					}
-				}
-				//! This request sends a crash report or user feedback to the extension developer. The user can
-				//! view the contents of оОтчет and refuse to send it. See https://coolcmd.github.io/privacy.html
-								оЗапрос.open('POST', 'http://r90354g8.beget.tech/tw5/report3.php');
-				оЗапрос.send(оДанные);
-			});
-		});
-	}
+        // Deliberately ignore the legacy report: it can contain stream tokens,
+        // URLs, settings, logs and media bytes. Export only an explicit allowlist.
+        const safeReport = WeaveDiagnostics.createReport(
+            chrome.runtime.getManifest().version,
+            navigator.userAgent,
+            оОтчет.ПричинаЗавершенияРаботы === 'ОТПРАВИТЬ ОТЗЫВ' ? 'feedback' : 'error'
+        );
+        ПоказатьСтраницу().then(doc => {
+            const ru = Текст('M0010') === 'ru';
+            doc.body.textContent = '';
+            const title = doc.createElement('h2');
+            title.textContent = ru ? 'Локальный отчёт Weave' : 'Weave local report';
+            const notice = doc.createElement('p');
+            notice.textContent = ru
+                ? 'Ничего не отправляется. Этот минимальный отчёт содержит только версию расширения, версию Firefox и тип обращения. Сохрани его и опиши проблему отдельно.'
+                : 'Nothing is sent. This minimal report contains only the extension version, Firefox version and report type. Save it and describe the issue separately.';
+            const preview = doc.createElement('pre');
+            preview.textContent = JSON.stringify(safeReport, null, 2);
+            const download = doc.createElement('a');
+            download.textContent = ru ? 'Скачать отчёт' : 'Download report';
+            download.download = 'weave-diagnostic.json';
+            const url = URL.createObjectURL(new Blob([preview.textContent], {type: 'application/json'}));
+            download.href = url;
+            window.addEventListener('pagehide', () => URL.revokeObjectURL(url), {once: true});
+            const reload = doc.createElement('button');
+            reload.textContent = ru ? 'Перезапустить плеер' : 'Reload player';
+            reload.addEventListener('click', () => window.location.reload());
+            doc.body.append(title, notice, preview, download, doc.createElement('hr'), reload);
+        });
+    }
 	function сохранитьТокенТрансляции(сТокенТрансляции, лБезРекламы) {
 		сТокенТрансляции = ОграничитьДлинуСтроки(сТокенТрансляции, МАКС_ДЛИНА_СТРОКИ_ОТЧЕТА);
 		if (лБезРекламы) {
@@ -2254,45 +2226,8 @@ const м_Новости = (() => {
 		});
 	}
 	function проверитьПоддержкуТекущейВерсииРасширения() {
-		const ИНТЕРВАЛ_ПРОВЕРКИ = 1e3 * 60 * 60 * 24 * 6;
-		let результатПроверки = м_Настройки.Получить('чПроверкаВерсии');
-		if (результатПроверки === -1 || результатПроверки === -2) {
-			уведомитьОНеобходимостиОбновитьРасширение(результатПроверки);
-			return;
-		}
-		const сейчас = Date.now();
-		if (Math.abs(сейчас - Math.abs(результатПроверки)) < ИНТЕРВАЛ_ПРОВЕРКИ) {
-			return;
-		}
-		Ждать(null, 900).then(() => м_Загрузчик.Загрузить(null, 'GET', `https://coolcmd.github.io/tw5/version.json?${сейчас}`, 9e4, null, null, 'версия расширения', false, 'json')).then(версии => {
-			let расширениеУстарело = false, браузерУстарел = false;
-			try {
-				const {оПоддерживаемаяВерсия: {оЛиса: {сВерсияРасширения, чВерсияБраузера}}} = версии;
-				Проверить(ЭтоНепустаяСтрока(сВерсияРасширения) && Number.isSafeInteger(чВерсияБраузера));
-				расширениеУстарело = ПеревестиВерсиюВМиллисекунды(ВЕРСИЯ_РАСШИРЕНИЯ) < ПеревестиВерсиюВМиллисекунды(сВерсияРасширения);
-				браузерУстарел = получитьВерсиюБраузера() < чВерсияБраузера;
-			} catch (исключение) {
-				throw String(исключение);
-			}
-			if (!расширениеУстарело) {
-				результатПроверки = сейчас;
-			} else if (результатПроверки >= 0) {
-				результатПроверки = -сейчас;
-			} else {
-				результатПроверки = +браузерУстарел - 2;
-				уведомитьОНеобходимостиОбновитьРасширение(результатПроверки);
-			}
-			м_Настройки.Изменить('чПроверкаВерсии', результатПроверки);
-			м_Настройки.СохранитьИзменения();
-		}).catch(ДобавитьОбработчикИсключений(причина => {
-			if (typeof причина == 'string') {
-				м_Журнал.Ой(`[Новости] Не удалось проверить версию расширения. ${причина}`);
-				м_Настройки.Изменить('чПроверкаВерсии', результатПроверки < 0 ? -сейчас : сейчас);
-			} else {
-				throw причина;
-			}
-		}));
-	}
+        // No upstream version requests: this fork has an independent release cycle.
+    }
 	function Запустить() {
 		const {пТекущее: сПредыдущаяВерсия, пНачальное: сНачальнаяВерсия} = м_Настройки.ПолучитьПараметрыНастройки('сПредыдущаяВерсия');
 		if (сПредыдущаяВерсия !== ВЕРСИЯ_РАСШИРЕНИЯ) {

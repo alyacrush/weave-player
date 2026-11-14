@@ -49,4 +49,4 @@ if(fs.existsSync('upload/Вставленный текст(5).txt')) {
  const master=ctx.parse(true,'https://test.invalid/master.m3u8',fs.readFileSync('upload/Вставленный текст(6).txt','utf8'));
  assert.equal(master.моВарианты[0].fmp4Codecs,'avc1.4D402A,mp4a.40.2');
 }
-console.log('PASS: fMP4 metadata/bytes/discontinuities/reset, malformed/encrypted input, HLS MAP/KEY, legacy playlists, supplied playlist regression');
+console.log('PASS: fMP4 metadata/bytes/discontinuities/reset, malformed/encrypted input, HLS MAP/KEY, legacy playlists');

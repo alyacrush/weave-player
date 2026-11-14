@@ -1,0 +1,11 @@
+/dist/
+/tmp/
+/node_modules/
+*.log
+.env
+.env.*
+*.xpi
+*.zip
+*.pem
+*.key
+/tests/fixtures/processed.mp4
