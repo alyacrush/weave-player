@@ -1400,5 +1400,6 @@
 	{
 		"message": "<p>There are <a href='https://support.mozilla.org/kb/about-picture-picture-firefox'>three ways</a> to enter Picture-in-Picture mode. You can open multiple Picture-in-Picture windows. Pause in this window is not yet available.</p>",
 		"description": "Часть справки для Firefox. См. также F1068."
-	}
+	},
+  "J_FMP4_UNSUPPORTED": {"message": "This fMP4 variant is not supported by this test build. Try another quality or open the stream on Twitch."}
 }

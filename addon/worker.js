@@ -1,4 +1,5 @@
 'use strict';
+importScripts('fmp4.js');
 
 var ДЕЛАТЬ_ПЕРВЫЙ_КАДР_КЛЮЧЕВЫМ = false;
 
@@ -1698,12 +1699,32 @@ var м_Журнал = (() => {
 		ОтправитьРезультат();
 		_лРазрыв = true;
 	}
+	const fmp4Processor = Fmp4.createProcessor();
+	let lastWasFmp4 = false;
 	function ОбработатьСообщение(пДанные) {
 		_оИсходныйСегмент = пДанные;
 		if (typeof _оИсходныйСегмент.пДанные == 'number') {
-			ОбработатьСменуСостояния();
-		} else {
-			ПреобразоватьСегмент();
+            fmp4Processor.reset();
+            lastWasFmp4 = false;
+            ОбработатьСменуСостояния();
+        } else if (_оИсходныйСегмент.fmp4Init) {
+            try {
+                fmp4Processor.process(_оИсходныйСегмент, _лРазрыв || !lastWasFmp4);
+            } catch (error) {
+                м_Журнал.Ой('[fMP4] ' + error.message);
+                м_Журнал.Отправить();
+                ЗавершитьРаботуИПоказатьСообщение('J_FMP4_UNSUPPORTED');
+            }
+            const data = _оИсходныйСегмент.пДанные;
+            const transfers = [data.мбМедиасегмент.buffer];
+            if (data.мбСегментИнициализации) transfers.push(data.мбСегментИнициализации.buffer);
+            ОтправитьРезультат(transfers);
+            lastWasFmp4 = true;
+            _лРазрыв = false;
+        } else {
+            if (lastWasFmp4) { _лРазрыв = true; fmp4Processor.reset(); }
+            lastWasFmp4 = false;
+            ПреобразоватьСегмент();
 		}
 		_оИсходныйСегмент = null;
 	}

@@ -2,13 +2,13 @@
   "manifest_version": 2,
   "browser_specific_settings": {
     "gecko": {
-      "id": "twitch5@coolcmd",
+      "id": "twitch5-fmp4-test@local.invalid",
       "strict_min_version": "58.0"
     }
   },
-  "name": "Alternate Player for Twitch.tv",
+  "name": "Alternate Player — fMP4 Test",
   "short_name": "Alternate Player",
-  "version": "2026.6.21",
+  "version": "2026.11.13.1",
   "description": "__MSG_M0001__",
   "icons": {
     "128": "manifest.svg"
