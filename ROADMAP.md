@@ -14,7 +14,7 @@ TODO = not implemented; BLOCKED = named dependency required.
 | P07 | Disable upstream reporting/version checks | DONE | Removed endpoints; diagnostic allowlist test passes |
 | P08 | Full network and privacy audit | REVIEW | PRIVACY draft and blockers; consent work pending |
 | P09 | Private GitHub repository | DONE | https://github.com/alyacrush/weave-player; base, fMP4 patch and Weave preparation published as separate commits |
-| P10 | GitHub CI | REVIEW | Workflow prepared, hosted run pending |
+| P10 | GitHub CI | DONE | [Run 43581343611](https://github.com/alyacrush/weave-player/actions/runs/43581343611): checks, reproducible packaging and artifact upload passed |
 | P11 | Public release readiness | BLOCKED | Resolve licensing, CSP/chat, privacy and manual test blockers |
 | P12 | Firefox stability matrix | REVIEW | Checkpoint user-tested; new development changes pending |
 | P13 | Mozilla submission | BLOCKED | P11/P12, publisher setup and review |
