@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.11.14.2 — Player context menu
+
+- Open the right-click menu below the pointer and keep it within the player.
+
 ## 2026.11.14.1 — Weave development preparation
 
 - Independent name, maintainer metadata, ID and original W icon.

@@ -1587,9 +1587,47 @@ const м_Меню = (() => {
 	function задатьДоступностьПункта(пПункт, лДоступен) {
 		Узел(пПункт).tabIndex = лДоступен ? 0 : -1;
 	}
+	const элПроигрыватель = Узел('проигрыватель');
+	const элМеню = Узел('главноеменю');
+	let оТочкаМеню = null;
+	function расположитьМеню() {
+		if (!оТочкаМеню) {
+			return;
+		}
+		const оГраницы = элПроигрыватель.getBoundingClientRect();
+		const чЛево = Math.max(0, оГраницы.left);
+		const чВерх = Math.max(0, оГраницы.top);
+		const чПраво = Math.min(document.documentElement.clientWidth, оГраницы.right);
+		const чНиз = Math.min(document.documentElement.clientHeight, оГраницы.bottom);
+		элМеню.style.maxWidth = Math.max(0, чПраво - чЛево) + 'px';
+		элМеню.style.maxHeight = Math.max(0, чНиз - чВерх) + 'px';
+		const чОтступ = 6;
+		const чШирина = элМеню.offsetWidth;
+		const чВысота = элМеню.offsetHeight;
+		элМеню.style.left = Math.max(чЛево, Math.min(оТочкаМеню.x + чОтступ, чПраво - чШирина)) + 'px';
+		const чПодКурсором = оТочкаМеню.y + чОтступ;
+		const чY = чПодКурсором + чВысота <= чНиз ? чПодКурсором : оТочкаМеню.y - чОтступ - чВысота;
+		элМеню.style.top = Math.max(чВерх, Math.min(чY, чНиз - чВысота)) + 'px';
+	}
 	Узел('глаз').addEventListener('contextmenu', оСобытие => {
 		оСобытие.preventDefault();
-		м_Окно.переключить('главноеменю');
+		if (оСобытие.button !== 2) {
+			м_Окно.переключить('главноеменю');
+			return;
+		}
+		оТочкаМеню = {x: оСобытие.clientX, y: оСобытие.clientY};
+		элМеню.classList.add('меню-у-курсора');
+		м_Окно.открыть('главноеменю');
+		расположитьМеню();
+	});
+	window.addEventListener('resize', расположитьМеню);
+	document.addEventListener('fullscreenchange', расположитьМеню);
+	м_События.ДобавитьОбработчик('окно-закрыто-главноеменю', () => {
+		оТочкаМеню = null;
+		элМеню.classList.remove('меню-у-курсора');
+		for (const сСвойство of ['left', 'top', 'max-width', 'max-height']) {
+			элМеню.style.removeProperty(сСвойство);
+		}
 	});
 	м_События.ДобавитьОбработчик('управление-левыйщелчок', оСобытие => {
 		if (оСобытие.target.classList.contains('меню-пункт')) {
