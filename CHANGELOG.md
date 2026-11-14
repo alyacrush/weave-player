@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.11.14.4 — Twitch toolbar icon
+
+- Replace the old 5 in the Twitch toolbar with the Weave W.
+
 ## 2026.11.14.3 — Menu closing and branding
 
 - Keep the context menu at the pointer until its closing transition finishes.

@@ -287,10 +287,8 @@ function вставитьНашуКнопку() {
 	кудаВставить.insertAdjacentHTML('afterend', `
 	<div class="tw5-автоперенаправление tw5-js-удалить">
 		<button type="button" id="tw5-автоперенаправление">
-			<svg viewBox="0 0 128 128">
-				<g>
-					<path d="M64 53h-19.688l-1.313-15.225h57l1.313-14.7h-74.55l3.937 44.888h51.712l-1.8 19.162-16.6 4.463l-16.8-4.463-1.1-11.813h-14.7l1.838 23.362 30.713 8.4l30.45-8.4 4.2-45.675z"/>
-				</g>
+			<svg viewBox="0 0 128 128" aria-hidden="true">
+				<path d="M20 34 41 94 64 42 87 94 108 34" fill="none" stroke="currentColor" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/>
 			</svg>
 		</button>
 		<div class="tw5-подсказка"></div>
@@ -307,7 +305,7 @@ function вставитьНашуКнопку() {
 				background-color: var(--color-background-button-text-default);
 				border-radius: var(--border-radius-rounded);
 				display: flex;
-				fill: var(--color-fill-button-icon);
+				color: var(--color-fill-button-icon);
 				height: var(--button-size-default);
 				justify-content: center;
 				width: var(--button-size-default);
@@ -315,12 +313,12 @@ function вставитьНашуКнопку() {
 			#tw5-автоперенаправление:hover
 			{
 				background-color: var(--color-background-button-text-hover);
-				fill: var(--color-fill-button-icon-hover);
+				color: var(--color-fill-button-icon-hover);
 			}
 			#tw5-автоперенаправление:active
 			{
 				background-color: var(--color-background-button-text-active);
-				fill: var(--color-fill-button-icon-active);
+				color: var(--color-fill-button-icon-active);
 			}
 			#tw5-автоперенаправление > svg
 			{

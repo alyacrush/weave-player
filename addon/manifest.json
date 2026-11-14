@@ -8,7 +8,7 @@
   },
   "name": "Weave Player for Twitch",
   "short_name": "Weave",
-  "version": "2026.11.14.3",
+  "version": "2026.11.14.4",
   "description": "__MSG_M0001__",
   "icons": {
     "128": "manifest.svg"
