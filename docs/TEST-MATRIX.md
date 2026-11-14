@@ -15,5 +15,6 @@
 | Network failure/recovery, end of stream | Not systematically tested | PENDING |
 | Clips/timing/statistics/frame stepping | fMP4 limitations remain | PENDING |
 | Browser MediaSource automation | Host denied browser launch | BLOCKED locally |
-| Hosted GitHub CI | Workflow file only | PENDING |
+| Hosted GitHub CI | Run 43581343611, checks and artifact upload | PASS |
 | Chrome | Not ported | NOT SUPPORTED |
+| Embedded chat investigation | Owner reports chat works; mode, Firefox version and header observations unspecified | PASS reported; scope to confirm |

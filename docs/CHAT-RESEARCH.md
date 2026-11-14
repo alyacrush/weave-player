@@ -1,6 +1,8 @@
 # Embedded chat investigation — 2026-11-14
 
-Status: code/documentation investigation complete; live Firefox experiment pending.
+Status: owner reports embedded chat works (2026-11-14); exact probe mode and
+header observations not yet supplied. Do not infer all three modes passed or
+that production header interception can already be removed.
 The owner prefers retaining chat beside the player. No production playback or chat
 code was changed by this investigation. Store readiness is NOT established.
 
