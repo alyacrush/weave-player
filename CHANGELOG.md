@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026.11.14.3 — Menu closing and branding
+
+- Keep the context menu at the pointer until its closing transition finishes.
+- Use Weave branding in tooltips, help and tab titles, and remove old store links.
+- Use a help icon for the About link and preserve upstream attribution.
+
 ## 2026.11.14.2 — Player context menu
 
 - Open the right-click menu below the pointer and keep it within the player.

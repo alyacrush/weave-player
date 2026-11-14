@@ -1,6 +1,6 @@
 {
   "M0001": {
-    "message": "Alternate player of live broadcasts for Twitch.tv website.",
+    "message": "Twitch live player with buffering and instant replay.",
     "description": "Краткое описание расширения. Копия этой строки есть в AMO и Windows Store."
   },
   "M0010": {
@@ -11,7 +11,7 @@
     "message": "Broadcast ended"
   },
   "J0101": {
-    "message": "\n\nClick to open this channel on the Twitch.tv website:\n• To watch this broadcast or video in standard player.\n• To read the full description of the channel.\n• To perform other actions that are not available in the Alternate Player."
+    "message": "\n\nClick to open this channel on the Twitch.tv website:\n• To watch this broadcast or video in standard player.\n• To read the full description of the channel.\n• To perform other actions that are not available in Weave."
   },
   "J0102": {
     "message": "\n\nClick to watch other broadcasts and videos of this category."
@@ -152,7 +152,7 @@
     "message": "The specified channel does not exist. Perhaps you typed the wrong address."
   },
   "J0204": {
-    "message": "This version of the “Weave Player for Twitch” extension does not work in your browser. Please remove the extension from your browser and install the correct version.\n\nVersion for Google Chrome:\nhttps://chrome.google.com/webstore/detail/bhplkbgoehhhddaoolmakpocnenplmhf\n\nVersion for Mozilla Firefox:\nhttps://addons.mozilla.org/firefox/addon/twitch_5/\n\nVersion for Microsoft Edge:\nhttps://microsoftedge.microsoft.com/addons/detail/aojjiodaaogdbbcnbpjnojilccopgcbk"
+    "message": "This build of Weave Player for Twitch is intended for Firefox."
   },
   "J0206": {
     "message": "There is a problem with video playback.\n\nPossible causes:\n• Video or audio uses compression, which is not supported by your browser.\n• The browser does not have enough RAM, or the browser has allocated too much RAM, or the 32-bit browser has allocated too much address space (see browser's “Virtual Size” in the “Process Explorer” utility). Some 64-bit browsers cannot allocate more than 4 GB of RAM per process. All tabs with the player share a single process.\n• The video was corrupted.\n• Problems with computer hardware: overheating, overclocking, etc.\n• Bugs in computer software.\n\nPlease reload the page to continue viewing the broadcast. If the problem persists on other channels, and you do not know its cause, follow these steps one at a time until the error will disappear:\n• Close the several browser tabs (to free up memory).\n• Restart the browser.\n• Restart the computer.\n• Disable hardware-accelerated video decoding.\n• Reset the browser settings.\n• Update the video card drivers.\n• Uninstall the “codec pack” (if any)."
@@ -518,7 +518,7 @@
     "message": "Help.\nThe F1 key on the keyboard."
   },
   "J0600": {
-    "message": "Right click toggles auto start of Alternate Player. Left click starts Alternate Player."
+    "message": "Right click toggles auto start of Weave. Left click starts Weave."
   },
   "F0604": {
     "message": "All Settings"
@@ -887,7 +887,7 @@
     "description": "Заголовок новости."
   },
   "F1042": {
-    "message": "<p>Some time ago, Google removed the extension from its Web Store, because the owners of the Twitch.tv website did not like the name of the extension. Therefore, I decided to change the name of the extension from <cite>Twitch 5</cite> to <cite>Weave Player for Twitch</cite>. Nothing else was changed. The extension is still being developed by the <cite>Alexander Choporov (CoolCmd)</cite>. The extension is available in the Google Web Store at the <a href='https://chrome.google.com/webstore/detail/bhplkbgoehhhddaoolmakpocnenplmhf' target='_blank' rel='noopener noreferrer'>new address</a>.</p>",
+    "message": "<p>In 2018, the original Twitch 5 extension was renamed to Alternate Player for Twitch.tv. Weave was created later as an independent fork.</p>",
     "description": "Новость."
   },
   "F1043": {
@@ -939,7 +939,7 @@
     "description": "Новость."
   },
   "F1064": {
-    "message": "<p>Added <a href='https://help.twitch.tv/s/article/viewer-channel-point-guide' target='_blank' rel='noopener noreferrer'>Channel Points</a> support. You must be logged in on the Twitch.tv website to earn them. Check your login status by clicking the channel icon in the upper right corner of Alternate Player.</p>",
+    "message": "<p>Added <a href='https://help.twitch.tv/s/article/viewer-channel-point-guide' target='_blank' rel='noopener noreferrer'>Channel Points</a> support. You must be logged in on the Twitch.tv website to earn them. Check your login status by clicking the channel icon in the upper right corner of Weave.</p>",
     "description": "Новость."
   },
   "F1065": {
@@ -1004,7 +1004,7 @@
     "message": "<p><b>Start by reading “Useful information” in the player menu</b> ( ⋮ button in the lower right corner ). I also recommend reading the tooltips that appear on buttons, links, and menus when you hover the mouse pointer over them.</p>"
   },
   "F1502": {
-    "message": "<p>To open the Twitch player or category on the Twitch.tv website, click the broadcast or category title at the top of the Alternate Player. Other links can be found in the player menu and in the channel information window.</p>"
+    "message": "<p>To open the Twitch player or category on the Twitch.tv website, click the broadcast or category title at the top of Weave. Other links can be found in the player menu and in the channel information window.</p>"
   },
   "F1503": {
     "message": "<p>On the Twitch.tv website in the upper right corner there is extension's logo “5”. The right click on the logo toggles the automatic start of the player. The left click starts the player (if possible). Automatic start is disabled on channels with encrypted broadcasts.</p>",
@@ -1046,7 +1046,7 @@
     "message": "<p>If you really need <strong>7TV</strong>, BetterTTV and FrankerFaceZ emotes in the extension chat, then uninstall 7TV browser extension and do one of the following:</p><ul><li>Install BetterTTV browser extension. Enable the appropriate emotes in the BetterTTV settings.<li>Install FrankerFaceZ browser extension. Enable “7TV Emotes” and “BetterTTV Emotes” add-ons in the FrankerFaceZ settings. If you use Chrome browser or its clone, additionally change “Storage | Provider” setting to “Local Storage” in the FrankerFaceZ settings.</ul>"
   },
   "F1516": {
-    "message": "<p>To track your followed channels and quickly switch between them, you can install the appropriate extension from your browser's store. Currently, Alternate Player does not yet have a list of followed channels.</p>"
+    "message": "<p>To track your followed channels and quickly switch between them, you can install the appropriate extension from your browser's store. Currently, Weave does not yet have a list of followed channels.</p>"
   },
   "F1517": {
     "message": "<p>Player and chat can be broken by: browser extensions, ad blockers, firewalls, antiviruses, VPN. To diagnose a problem, try temporarily turning off all of the above. Here are the <a href='about.html' target='_blank' rel='noopener noreferrer'>Privacy Badger extension settings</a>, which do not interfere with chat.</p>"

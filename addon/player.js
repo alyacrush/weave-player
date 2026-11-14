@@ -1623,7 +1623,13 @@ const м_Меню = (() => {
 	window.addEventListener('resize', расположитьМеню);
 	document.addEventListener('fullscreenchange', расположитьМеню);
 	м_События.ДобавитьОбработчик('окно-закрыто-главноеменю', () => {
+		// Keep the last position during the closing transition.
 		оТочкаМеню = null;
+	});
+	м_События.ДобавитьОбработчик('окно-открыто-главноеменю', () => {
+		if (оТочкаМеню) {
+			return;
+		}
 		элМеню.classList.remove('меню-у-курсора');
 		for (const сСвойство of ['left', 'top', 'max-width', 'max-height']) {
 			элМеню.style.removeProperty(сСвойство);
@@ -3070,7 +3076,7 @@ const м_Управление = (() => {
 	}
 	function ПоказатьМетаданныеКанала(оМетаданные) {
 		if (оМетаданные.сИмя !== void 0) {
-			ИзменитьЗаголовокДокумента(`${оМетаданные.сИмя} - Alternate Player for Twitch.tv`);
+			ИзменитьЗаголовокДокумента(`${оМетаданные.сИмя} - Weave Player for Twitch`);
 			Узел('канал-имя').textContent = оМетаданные.сИмя;
 		}
 		if (оМетаданные.сАватар !== void 0) {
@@ -5403,9 +5409,6 @@ const м_Twitch = (() => {
 		return `https://www.twitch.tv/team/${encodeURIComponent(сИмяКоманды)}`;
 	}
 	function проверитьДоступностьАдреса(сАдрес) {
-		if (сАдрес.startsWith('https://coolcmd.github.io/')) {
-			return;
-		}
 		if (!/^https?:\/\/(?:[^/]+\.)?(?:twitch\.tv|twitchcdn\.net|ttvnw\.net|jtvnw\.net|live-video\.net|akamaized\.net|cloudfront\.net)\//.test(сАдрес)) {
 			throw new Error(`Неизвестный адрес: ${сАдрес}`);
 		}
