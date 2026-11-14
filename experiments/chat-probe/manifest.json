@@ -1,0 +1,10 @@
+{
+  "manifest_version": 2,
+  "name": "Weave Chat Compatibility Probe",
+  "version": "0.1.0",
+  "browser_specific_settings": {"gecko": {"id": "weave-chat-probe@alyacrush", "strict_min_version": "109.0"}},
+  "permissions": ["webRequest", "https://www.twitch.tv/*"],
+  "background": {"scripts": ["background.js"]},
+  "browser_action": {"default_title": "Open Weave chat probe"},
+  "content_scripts": [{"matches": ["https://www.twitch.tv/*"], "all_frames": true, "js": ["loaded.js"], "run_at": "document_idle"}]
+}
