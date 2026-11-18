@@ -242,7 +242,7 @@
     "message": "Click to see what's new in the extension!"
   },
   "A0509": {
-    "message": "Open or close the chat. This command is available in full-screen mode.\nThe C key on the keyboard."
+    "message": "Twitch chat"
   },
   "A0510": {
     "message": "Open or close the player settings.\nThe V key on the keyboard."
@@ -518,7 +518,19 @@
     "message": "Help.\nThe F1 key on the keyboard."
   },
   "J0600": {
-    "message": "Right click toggles auto start of Weave. Left click starts Weave."
+    "message": "Choose a mode to apply it on the current channel. Click W to launch the selected player."
+  },
+  "J0601": {
+    "message": "Mode: Off"
+  },
+  "J0602": {
+    "message": "Mode: Player on Twitch"
+  },
+  "J0603": {
+    "message": "Mode: Standalone Weave page"
+  },
+  "J0604": {
+    "message": "Weave player mode"
   },
   "F0604": {
     "message": "All Settings"

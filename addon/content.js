@@ -1,18 +1,25 @@
 'use strict';
 
-const ХРАНИТЬ_СОСТОЯНИЕ_КАНАЛА = 2e4;
+const PLAYER_OFF = 0;
+const PLAYER_EMBEDDED = 1;
+const PLAYER_PAGE = 2;
+const PLAYER_MODE_KEY = 'чРежимПлеера';
+const PLAYER_MODE_MESSAGES = ['J0601', 'J0602', 'J0603'];
+let cancelEmbeddedWait = null;
+
+function playerMode() {
+	return м_Настройки.Получить(PLAYER_MODE_KEY);
+}
+
+function canAutoLaunch(address) {
+	return address.лМожноПеренаправлять && playerMode() !== PLAYER_OFF &&
+		(playerMode() !== PLAYER_EMBEDDED || !address.лМобильнаяВерсия);
+}
 
 let г_оРазобранныйАдрес = null;
-
-let г_сСпособЗаданияАдреса = '';
-
-let г_чПоследняяПроверка = 0;
-
 let г_оЗапрос = null;
-
-let г_сКодКанала = '';
-
-let г_лИдетТрансляция = false;
+let observedAddress = '';
+let launchGeneration = 0;
 
 const м_Отладка = {
 	ЗавершитьРаботуИПоказатьСообщение: завершитьРаботу,
@@ -45,18 +52,20 @@ function вставитьНаСтраницу(фВставить) {
 	узСкрипт.remove();
 }
 
-function этотАдресМожноПеренаправлять(оАдрес) {
-	return !оАдрес.search.includes(АДРЕС_НЕ_ПЕРЕНАПРАВЛЯТЬ);
-}
+const bypassParameter = АДРЕС_НЕ_ПЕРЕНАПРАВЛЯТЬ.split('=')[0];
+const legacyBypassParameter = 'twitch5';
 
-function получитьНеперенаправляемыйАдрес(оАдрес) {
-	return `${оАдрес.protocol}//${оАдрес.host}${оАдрес.pathname}${оАдрес.search.length > 1 ? `${оАдрес.search}&${АДРЕС_НЕ_ПЕРЕНАПРАВЛЯТЬ}` : `?${АДРЕС_НЕ_ПЕРЕНАПРАВЛЯТЬ}`}${оАдрес.hash}`;
+function этотАдресМожноПеренаправлять(оАдрес) {
+	const params = new URLSearchParams(оАдрес.search);
+	return !params.has(bypassParameter, '0') && !params.has(legacyBypassParameter, '0');
 }
 
 function запретитьАвтоперенаправлениеЭтойСтраницы() {
-	if (этотАдресМожноПеренаправлять(location)) {
-		history.replaceState(history.state, '', получитьНеперенаправляемыйАдрес(location));
-	}
+	const url = new URL(location.href);
+	url.searchParams.delete(legacyBypassParameter, '0');
+	url.searchParams.set(bypassParameter, '0');
+	history.replaceState(history.state, '', url);
+	observedAddress = location.pathname + location.search;
 }
 
 разобратьАдрес.ЭТО_НЕ_КОД_КАНАЛА = new Set([ 'directory', 'embed', 'friends', 'inventory', 'login', 'logout', 'manager', 'messages', 'payments', 'popout', 'search', 'settings', 'signup', 'subscriptions', 'team' ]);
@@ -89,172 +98,211 @@ function разобратьАдрес(оАдрес) {
 	};
 }
 
-function запроситьСостояниеКанала(оРазобранныйАдрес) {
-	if (!оРазобранныйАдрес.лМожноПеренаправлять || !м_Настройки.Получить('лАвтоперенаправлениеРазрешено')) {
-		return;
-	}
-	if (!г_оЗапрос && г_сКодКанала === оРазобранныйАдрес.сКодКанала && performance.now() - г_чПоследняяПроверка < ХРАНИТЬ_СОСТОЯНИЕ_КАНАЛА) {
-		return;
-	}
-	if (г_оЗапрос && г_сКодКанала === оРазобранныйАдрес.сКодКанала) {
-		return;
-	}
-	отменитьЗапрос();
-	г_сКодКанала = оРазобранныйАдрес.сКодКанала;
-	г_чПоследняяПроверка = -1;
-	отправитьЗапрос();
-}
-
-function измененАдресСтраницы(сСпособ) {
-	г_оРазобранныйАдрес = разобратьАдрес(location);
-	г_сСпособЗаданияАдреса = сСпособ;
-	if (!г_оРазобранныйАдрес.лМожноПеренаправлять || !м_Настройки.Получить('лАвтоперенаправлениеРазрешено')) {
-		if (г_чПоследняяПроверка === -2) {
-			г_чПоследняяПроверка = -1;
+function observeChannelNavigation() {
+	const addressKey = location.pathname + location.search;
+	if (addressKey !== observedAddress) {
+		observedAddress = addressKey;
+		const previousChannel = г_оРазобранныйАдрес?.сКодКанала;
+		г_оРазобранныйАдрес = разобратьАдрес(location);
+		if (new URLSearchParams(location.search).has(legacyBypassParameter, '0')) {
+			запретитьАвтоперенаправлениеЭтойСтраницы();
 		}
-		return;
-	}
-	if (!г_оЗапрос && г_сКодКанала === г_оРазобранныйАдрес.сКодКанала && performance.now() - г_чПоследняяПроверка < ХРАНИТЬ_СОСТОЯНИЕ_КАНАЛА) {
-		if (г_лИдетТрансляция) {
-			перенаправитьНаНашПроигрыватель(г_сКодКанала);
+		cancelPendingLaunch();
+		if (previousChannel !== г_оРазобранныйАдрес.сКодКанала) {
+			closeEmbeddedPlayer?.();
 		}
-		return;
+		if (canAutoLaunch(г_оРазобранныйАдрес)) {
+			checkLiveChannel(г_оРазобранныйАдрес.сКодКанала);
+		}
 	}
-	if (г_оЗапрос && г_сКодКанала === г_оРазобранныйАдрес.сКодКанала) {
-		г_чПоследняяПроверка = -2;
-		return;
-	}
-	отменитьЗапрос();
-	г_сКодКанала = г_оРазобранныйАдрес.сКодКанала;
-	г_чПоследняяПроверка = -2;
-	отправитьЗапрос();
-}
-
-function отменитьЗапрос() {
-	if (г_оЗапрос) {
-		м_Журнал.Окак('[content.js] Отменяю незавершенный запрос');
-		г_оЗапрос.abort();
+	if (!г_оРазобранныйАдрес.лМобильнаяВерсия && !получитьНашуКнопку()) {
+		вставитьНашуКнопку();
 	}
 }
 
-function отправитьЗапрос() {
-	м_Журнал.Окак(`[content.js] Посылаю запрос для канала ${г_сКодКанала}`);
-	г_оЗапрос = new XMLHttpRequest();
-	г_оЗапрос.addEventListener('loadend', обработатьОтвет);
-	г_оЗапрос.open('POST', 'https://gql.twitch.tv/gql#origin=twilight');
-	г_оЗапрос.responseType = 'json';
-	г_оЗапрос.timeout = 15e3;
-	г_оЗапрос.setRequestHeader('Accept-Language', 'en-US');
-	г_оЗапрос.setRequestHeader('Client-ID', 'kimne78kx3ncx6brgo4mv6wki5h1ko');
-	г_оЗапрос.setRequestHeader('Content-Type', 'text/plain; charset=UTF-8');
-	if (отправитьЗапрос._мсИдУстройства === void 0) {
-		отправитьЗапрос._мсИдУстройства = document.cookie.match(/(?:^|;[ \t]?)unique_id=([^;]+)/);
-	}
-	if (отправитьЗапрос._мсИдУстройства) {
-		г_оЗапрос.setRequestHeader('X-Device-ID', отправитьЗапрос._мсИдУстройства[1]);
-	}
-	г_оЗапрос.send(создатьТелоЗапросаGql(`query($login: String!) {
-			user(login: $login) {
-				stream {
-					isEncrypted
-				}
-				watchParty {
-					session {
-						state
-					}
-				}
-			}
-		}`, {
-		login: г_сКодКанала
-	}));
-}
-
-function обработатьОтвет({target: оЗапрос}) {
+function cancelPendingLaunch() {
+	++launchGeneration;
+	cancelEmbeddedWait?.();
+	const previous = г_оЗапрос;
 	г_оЗапрос = null;
-	if (оЗапрос.status >= 200 && оЗапрос.status < 300 && ЭтоОбъект(оЗапрос.response)) {
-		const лПеренаправить = г_чПоследняяПроверка === -2;
-		г_чПоследняяПроверка = performance.now();
-		let лТрансляцияЗавершенаИлиЗакодирована = true, лСовместныйПросмотр = false;
-		try {
-			лТрансляцияЗавершенаИлиЗакодирована = оЗапрос.response.data.user.stream.isEncrypted === true;
-			лСовместныйПросмотр = оЗапрос.response.data.user.watchParty.session.state === 'IN_PROGRESS';
-		} catch (_) {}
-		г_лИдетТрансляция = !лТрансляцияЗавершенаИлиЗакодирована && !лСовместныйПросмотр;
-		if (г_лИдетТрансляция && лПеренаправить) {
-			перенаправитьНаНашПроигрыватель(г_сКодКанала);
+	previous?.abort();
+}
+
+function checkLiveChannel(channel) {
+	const request = г_оЗапрос = new XMLHttpRequest();
+	request.addEventListener('loadend', () => {
+		if (request !== г_оЗапрос) return;
+		г_оЗапрос = null;
+		const address = разобратьАдрес(location);
+		const user = request.response?.data?.user;
+		if (request.status >= 200 && request.status < 300 &&
+			address.сКодКанала === channel && canAutoLaunch(address) &&
+			user?.stream && user.stream.isEncrypted !== true &&
+			user.watchParty?.session?.state !== 'IN_PROGRESS') {
+			launchPlayer(address, true);
 		}
-	} else {
-		г_чПоследняяПроверка = 0;
+	});
+	request.open('POST', 'https://gql.twitch.tv/gql#origin=twilight');
+	request.responseType = 'json';
+	request.timeout = 15000;
+	request.setRequestHeader('Accept-Language', 'en-US');
+	request.setRequestHeader('Client-ID', 'kimne78kx3ncx6brgo4mv6wki5h1ko');
+	request.setRequestHeader('Content-Type', 'text/plain; charset=UTF-8');
+	const device = document.cookie.match(/(?:^|;[ 	]?)unique_id=([^;]+)/);
+	if (device) request.setRequestHeader('X-Device-ID', device[1]);
+	request.send(создатьТелоЗапросаGql(`query($login: String!) {
+		user(login: $login) {
+			stream { isEncrypted }
+			watchParty { session { state } }
+		}
+	}`, {login: channel}));
+}
+
+function launchPlayer(address, automatic = false) {
+	if (address.сСтраница !== 'ВОЗМОЖНО_ПРЯМАЯ_ТРАНСЛЯЦИЯ') return;
+	if (playerMode() === PLAYER_EMBEDDED && !address.лМобильнаяВерсия) {
+		waitForEmbeddedPlayer(address.сКодКанала);
+	} else if (playerMode() === PLAYER_PAGE) {
+		if (!automatic) запретитьАвтоперенаправлениеЭтойСтраницы();
+		задатьАдресСтраницы(ПолучитьАдресНашегоПроигрывателя(address.сКодКанала), automatic);
 	}
 }
 
-function запуститьНашПроигрыватель(сКодКанала) {
-	const сАдресПроигрывателя = ПолучитьАдресНашегоПроигрывателя(сКодКанала);
-	м_Журнал.Окак(`[content.js] Перехожу на страницу ${сАдресПроигрывателя}`);
-	запретитьАвтоперенаправлениеЭтойСтраницы();
-	задатьАдресСтраницы(сАдресПроигрывателя);
-}
-
-function перенаправитьНаНашПроигрыватель(сКодКанала) {
-	const сАдресПроигрывателя = ПолучитьАдресНашегоПроигрывателя(сКодКанала);
-	м_Журнал.Окак(`[content.js] Меняю адрес страницы с ${location.href} на ${сАдресПроигрывателя}`);
-	document.documentElement.setAttribute('data-tw5-перенаправление', сАдресПроигрывателя);
-	if (получитьВерсиюБраузера() >= 57 && !этоМобильноеУстройство()) {
-		задатьАдресСтраницы(сАдресПроигрывателя, true);
-	} else if (г_сСпособЗаданияАдреса === 'PUSHSTATE') {
-		history.back();
-	} else {
-		запретитьАвтоперенаправлениеЭтойСтраницы();
-		задатьАдресСтраницы(сАдресПроигрывателя);
+let closeEmbeddedPlayer = null;
+function openEmbeddedPlayer(channel) {
+	if (closeEmbeddedPlayer) return true;
+	const surface = document.querySelector('[data-a-target="video-player"]');
+	const video = surface?.querySelector('video');
+	if (!video || !surface.clientHeight) {
+		return false;
 	}
-}
 
-function обработатьPointerDownИClick(оСобытие) {
-	if (г_оРазобранныйАдрес) {
-		const узСсылка = оСобытие.target.closest('a[href]');
-		if (узСсылка && оСобытие.isPrimary !== false && оСобытие.button === ЛЕВАЯ_КНОПКА && !оСобытие.shiftKey && !оСобытие.ctrlKey && !оСобытие.altKey && !оСобытие.metaKey) {
-			м_Журнал.Окак(`[content.js] Произошло событие ${оСобытие.type} у ссылки ${узСсылка.href}`);
-			запроситьСостояниеКанала(разобратьАдрес(узСсылка));
+	const panel = document.createElement('div');
+	panel.style.cssText = 'position:absolute;inset:0;z-index:100;background:#000;display:grid;grid-template-rows:auto minmax(0,1fr);overflow:hidden';
+	const restore = document.createElement('button');
+	restore.type = 'button';
+	restore.textContent = 'Вернуть плеер Twitch / Restore Twitch player';
+	restore.style.cssText = 'color:white;background:#232328;padding:4px;cursor:pointer';
+	const frame = document.createElement('iframe');
+	frame.src = chrome.runtime.getURL('player.html') + '?embedded=1&channel=' + encodeURIComponent(channel);
+	frame.title = 'Weave Player';
+	frame.allow = 'autoplay; fullscreen';
+	frame.style.cssText = 'display:block;min-width:0;min-height:0;width:100%;height:100%;border:0';
+	panel.append(restore, frame);
+
+	const originalPosition = surface.style.position;
+	const wasPlaying = !video.paused;
+	if (getComputedStyle(surface).position === 'static') {
+		surface.style.position = 'relative';
+	}
+	// Twitch may size the video surface larger than its clipped layout slot.
+	function fitPanel() {
+		const bounds = surface.getBoundingClientRect();
+		let right = bounds.right;
+		let bottom = bounds.bottom;
+		for (let parent = surface.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
+			const style = getComputedStyle(parent);
+			if (!['hidden', 'clip'].includes(style.overflowX) && !['hidden', 'clip'].includes(style.overflowY)) continue;
+			const clip = parent.getBoundingClientRect();
+			if (['hidden', 'clip'].includes(style.overflowX)) {
+				right = Math.min(right, clip.left + parent.clientLeft + parent.clientWidth);
+			}
+			if (['hidden', 'clip'].includes(style.overflowY)) {
+				bottom = Math.min(bottom, clip.top + parent.clientTop + parent.clientHeight);
+			}
+		}
+		panel.style.right = Math.max(0, bounds.right - right) + 'px';
+		panel.style.bottom = Math.max(0, bounds.bottom - bottom) + 'px';
+	}
+	const sizeObserver = new ResizeObserver(fitPanel);
+	for (let node = surface; node && node !== document.body; node = node.parentElement) {
+		sizeObserver.observe(node);
+	}
+
+	function pauseOriginal(event) {
+		if (event.target instanceof HTMLVideoElement) {
+			event.target.pause();
 		}
 	}
+	surface.addEventListener('play', pauseOriginal, true);
+	video.pause();
+	const mountedPath = location.pathname;
+	const observer = new MutationObserver(() => {
+		if (!panel.isConnected || location.pathname !== mountedPath) {
+			closeEmbeddedPlayer?.();
+		}
+	});
+	function close() {
+		observer.disconnect();
+		sizeObserver.disconnect();
+		surface.removeEventListener('play', pauseOriginal, true);
+		surface.style.position = originalPosition;
+		panel.remove();
+		closeEmbeddedPlayer = null;
+		if (wasPlaying && video.isConnected && location.pathname === mountedPath) {
+			video.play().catch(() => {});
+		}
+	}
+	closeEmbeddedPlayer = close;
+	restore.addEventListener('click', close);
+	surface.append(panel);
+	fitPanel();
+	observer.observe(document.body, {childList: true, subtree: true});
+	return true;
 }
 
-function обработатьPopState(оСобытие) {
-	if (г_оРазобранныйАдрес) {
-		м_Журнал.Окак(`[content.js] Произошло событие popstate ${location.href}`);
-		document.title = 'Twitch';
-		if (document.documentElement.hasAttribute('data-tw5-перенаправление')) {
-			м_Журнал.Окак('[content.js] Завершаю перенаправление');
-			оСобытие.stopImmediatePropagation();
-			задатьАдресСтраницы(document.documentElement.getAttribute('data-tw5-перенаправление'));
+function waitForEmbeddedPlayer(channel) {
+	cancelEmbeddedWait?.();
+	if (openEmbeddedPlayer(channel)) return;
+	const path = location.pathname;
+	const timer = window.setInterval(() => {
+		if (location.pathname !== path || playerMode() !== PLAYER_EMBEDDED || openEmbeddedPlayer(channel)) {
+			cancelEmbeddedWait?.();
+		}
+	}, 250);
+	const timeout = window.setTimeout(() => cancelEmbeddedWait?.(), 10000);
+	cancelEmbeddedWait = () => {
+		window.clearInterval(timer);
+		window.clearTimeout(timeout);
+		cancelEmbeddedWait = null;
+	};
+}
+
+function selectNextPlayerMode(event) {
+	event.preventDefault();
+	setPlayerMode((playerMode() + 1) % PLAYER_MODE_MESSAGES.length);
+}
+
+function setPlayerMode(next) {
+	cancelPendingLaunch();
+	const address = разобратьАдрес(location);
+	if (next === PLAYER_OFF) closeEmbeddedPlayer?.();
+	if (next === playerMode()) {
+		launchPlayer(address);
+		return;
+	}
+
+	м_Настройки.Изменить(PLAYER_MODE_KEY, next, true);
+	обновитьНашуКнопку();
+	const generation = launchGeneration;
+	const pathname = location.pathname;
+	chrome.storage.local.set({[PLAYER_MODE_KEY]: next}, () => {
+		if (chrome.runtime.lastError) {
+			console.error('Could not save Weave player mode:', chrome.runtime.lastError.message);
 			return;
 		}
-		измененАдресСтраницы('POPSTATE');
-		if (document.documentElement.hasAttribute('data-tw5-перенаправление')) {
-			м_Журнал.Окак('[content.js] Скрываю событие popstate');
-			оСобытие.stopImmediatePropagation();
+		if (generation === launchGeneration && pathname === location.pathname && next === playerMode()) {
+			launchPlayer(address);
 		}
-	}
-}
-
-function обработатьPushState(оСобытие) {
-	м_Журнал.Окак(`[content.js] Произошло событие tw5-pushstate ${location.href}`);
-	измененАдресСтраницы('PUSHSTATE');
+	});
 }
 
 function обработатьЗапускНашегоПроигрывателя(оСобытие) {
-	оСобытие.preventDefault();
-	if (оСобытие.button === ЛЕВАЯ_КНОПКА && г_оРазобранныйАдрес.сСтраница === 'ВОЗМОЖНО_ПРЯМАЯ_ТРАНСЛЯЦИЯ') {
-		запуститьНашПроигрыватель(г_оРазобранныйАдрес.сКодКанала);
-	} else {
-		м_Журнал.Окак(`[content.js] Не запускать проигрыватель Кнопка=${оСобытие.button} Страница=${г_оРазобранныйАдрес.сСтраница}`);
+	if (оСобытие.button === ЛЕВАЯ_КНОПКА) {
+		оСобытие.preventDefault();
+		cancelPendingLaunch();
+		launchPlayer(разобратьАдрес(location));
 	}
-}
-
-function обработатьПереключениеАвтоперенаправления(оСобытие) {
-	оСобытие.preventDefault();
-	м_Настройки.Изменить('лАвтоперенаправлениеРазрешено', !м_Настройки.Получить('лАвтоперенаправлениеРазрешено'));
-	обновитьНашуКнопку();
 }
 
 function обработатьЗакрытиеСправки(оСобытие) {
@@ -274,7 +322,16 @@ function получитьНашуКнопку() {
 
 function обновитьНашуКнопку() {
 	const кнопка = получитьНашуКнопку();
-	кнопка.classList.toggle('tw5-запрещено', !м_Настройки.Получить('лАвтоперенаправлениеРазрешено'));
+	if (кнопка) {
+		const mode = playerMode();
+		const description = м_i18n.GetMessage(PLAYER_MODE_MESSAGES[mode]);
+		кнопка.classList.toggle('tw5-запрещено', mode === PLAYER_OFF);
+		кнопка.setAttribute('aria-label', description);
+		кнопка.parentElement.querySelector('.tw5-подсказка').textContent = description + '\n' + м_i18n.GetMessage('J0600');
+		for (const option of кнопка.parentElement.querySelectorAll('[data-weave-mode]')) {
+			option.setAttribute('aria-pressed', String(Number(option.dataset.weaveMode) === mode));
+		}
+	}
 	return кнопка;
 }
 
@@ -286,6 +343,11 @@ function вставитьНашуКнопку() {
 	м_Журнал.Окак('[content.js] Вставляю нашу кнопку');
 	кудаВставить.insertAdjacentHTML('afterend', `
 	<div class="tw5-автоперенаправление tw5-js-удалить">
+		<div class="weave-mode-switch" role="group">
+			<button type="button" data-weave-mode="0"><span aria-hidden="true">○</span></button>
+			<button type="button" data-weave-mode="1"><span aria-hidden="true">▣</span></button>
+			<button type="button" data-weave-mode="2"><span aria-hidden="true">□</span></button>
+		</div>
 		<button type="button" id="tw5-автоперенаправление">
 			<svg viewBox="0 0 128 128" aria-hidden="true">
 				<path d="M20 34 41 94 64 42 87 94 108 34" fill="none" stroke="currentColor" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/>
@@ -295,9 +357,37 @@ function вставитьНашуКнопку() {
 		<style>
 			.tw5-автоперенаправление
 			{
-				flex: 0 0;
+				flex: 0 0 auto;
+				display: flex;
+				align-items: center;
+				gap: 4px;
 				margin: 0 .5rem;
 				position: relative;
+			}
+			.weave-mode-switch {
+				display: flex;
+				gap: 2px;
+				padding: 2px;
+				border-radius: 999px;
+				background: var(--color-background-button-text-hover, #303036);
+			}
+			.weave-mode-switch button {
+				display: grid;
+				place-items: center;
+				width: 24px;
+				height: 24px;
+				border-radius: 50%;
+				color: var(--color-text-base, #fff);
+				font-size: 16px;
+				line-height: 1;
+			}
+			.weave-mode-switch button[aria-pressed="true"] {
+				background: #0b5c50;
+				color: #fff;
+			}
+			.weave-mode-switch button:focus-visible {
+				outline: 2px solid #69e3b5;
+				outline-offset: 1px;
 			}
 			#tw5-автоперенаправление
 			{
@@ -347,6 +437,7 @@ function вставитьНашуКнопку() {
 				transform: translateX(-50%);
 				width: -moz-max-content;
 				width: max-content;
+				white-space: pre-line;
 				z-index: var(--z-index-modal);
 			}
 			.tw5-подсказка::after
@@ -377,9 +468,17 @@ function вставитьНашуКнопку() {
 	</div>
 	`);
 	const кнопка = обновитьНашуКнопку();
-	кнопка.nextElementSibling.textContent = м_i18n.GetMessage('J0600');
+	const group = кнопка.parentElement.querySelector('.weave-mode-switch');
+	group.setAttribute('aria-label', м_i18n.GetMessage('J0604'));
+	for (const option of group.querySelectorAll('[data-weave-mode]')) {
+		const mode = Number(option.dataset.weaveMode);
+		const label = м_i18n.GetMessage(PLAYER_MODE_MESSAGES[mode]);
+		option.title = label;
+		option.setAttribute('aria-label', label);
+		option.addEventListener('click', () => setPlayerMode(mode));
+	}
 	кнопка.addEventListener('click', обработатьЗапускНашегоПроигрывателя);
-	кнопка.addEventListener('contextmenu', обработатьПереключениеАвтоперенаправления);
+	кнопка.addEventListener('contextmenu', selectNextPlayerMode);
 	if (!м_Настройки.Получить('лАвтоперенаправлениеЗамечено')) {
 		кнопка.parentNode.classList.add('tw5-справка');
 		кнопка.parentNode.addEventListener('mouseover', обработатьЗакрытиеСправки);
@@ -388,53 +487,6 @@ function вставитьНашуКнопку() {
 		});
 	}
 	return true;
-}
-
-function вставитьНашуКнопкуВПервыйРаз() {
-	if (!г_оРазобранныйАдрес.лМобильнаяВерсия) {
-		вставитьНашуКнопку();
-		window.addEventListener('tw5-изменензаголовок', () => {
-			if (!получитьНашуКнопку()) {
-				вставитьНашуКнопку();
-			}
-		});
-	}
-}
-
-function перехватитьФункции() {
-	let _лНеПерехватывать = false;
-	window.addEventListener('tw5-неперехватывать', () => {
-		_лНеПерехватывать = true;
-	});
-	const oTitleDescriptor = Object.getOwnPropertyDescriptor(Document.prototype, 'title');
-	Object.defineProperty(document, 'title', {
-		configurable: oTitleDescriptor.configurable,
-		enumerable: oTitleDescriptor.enumerable,
-		get() {
-			return oTitleDescriptor.get.call(this);
-		},
-		set(title) {
-			if (_лНеПерехватывать) {
-				oTitleDescriptor.set.call(this, title);
-			} else if (this.documentElement.hasAttribute('data-tw5-перенаправление')) {} else {
-				oTitleDescriptor.set.call(this, title);
-				window.dispatchEvent(new CustomEvent('tw5-изменензаголовок'));
-			}
-		}
-	});
-	const fPushState = history.pushState;
-	history.pushState = function(state, title) {
-		if (_лНеПерехватывать) {
-			fPushState.apply(this, arguments);
-		} else if (document.documentElement.hasAttribute('data-tw5-перенаправление')) {} else {
-			const сБыло = location.pathname;
-			fPushState.apply(this, arguments);
-			if (сБыло !== location.pathname) {
-				oTitleDescriptor.set.call(document, 'Twitch');
-				window.dispatchEvent(new CustomEvent('tw5-pushstate'));
-			}
-		}
-	};
 }
 
 function разрешитьРаботуЧата() {
@@ -502,15 +554,22 @@ function удалитьХвостыСтаройВерсии() {
 		}
 		return;
 	}
+	if (window.top !== window) return;
 	удалитьХвостыСтаройВерсии();
-	const сСобытие = window.PointerEvent ? 'pointerdown' : 'mousedown';
-	window.addEventListener(сСобытие, обработатьPointerDownИClick, true);
-	window.addEventListener('click', обработатьPointerDownИClick, true);
-	window.addEventListener('popstate', обработатьPopState);
 	м_Настройки.Восстановить().then(() => {
-		измененАдресСтраницы('LOAD');
-		window.addEventListener('tw5-pushstate', обработатьPushState);
-		вставитьНаСтраницу(перехватитьФункции);
-		вставитьНашуКнопкуВПервыйРаз();
+		chrome.storage.onChanged.addListener((changes, area) => {
+			if (area !== 'local' || !Object.hasOwn(changes, PLAYER_MODE_KEY)) return;
+			const mode = changes[PLAYER_MODE_KEY].newValue ?? PLAYER_PAGE;
+			if (!Number.isInteger(mode) || mode < PLAYER_OFF || mode > PLAYER_PAGE || mode === playerMode()) return;
+			м_Настройки.Изменить(PLAYER_MODE_KEY, mode, true);
+			cancelPendingLaunch();
+			if (mode === PLAYER_OFF) closeEmbeddedPlayer?.();
+			обновитьНашуКнопку();
+		});
+		// Twitch changes the channel through History API without reloading this script.
+		observeChannelNavigation();
+		window.addEventListener('popstate', observeChannelNavigation);
+		window.addEventListener('pageshow', observeChannelNavigation);
+		window.setInterval(observeChannelNavigation, 250);
 	}).catch(м_Отладка.ПойманоИсключение);
 })();

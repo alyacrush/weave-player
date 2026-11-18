@@ -34,30 +34,41 @@ chrome.webRequest.onBeforeSendHeaders.addListener(request => {
 	types: [ 'xmlhttprequest' ]
 }, beforeSendHeadersOptions);
 
-const headersReceivedOptions = [ 'responseHeaders', 'blocking' ];
-
-for (const option of Object.keys(chrome.webRequest.OnHeadersReceivedOptions)) {
-	if (chrome.webRequest.OnHeadersReceivedOptions[option] === 'extraHeaders') {
-		headersReceivedOptions.push('extraHeaders');
-		break;
-	}
-}
-
-//! Removes HTTP response headers that prevent the document from loading into <iframe>.
-chrome.webRequest.onHeadersReceived.addListener(response => {
-	if (response.frameId <= 0 || response.parentFrameId !== 0) {
+// Review disclosure: this deliberately relaxes framing only for the Weave chat.
+chrome.webRequest.onHeadersReceived.addListener(details => {
+	if (details.parentFrameId !== 0 || details.frameId <= 0 ||
+		!/^https:\/\/www\.twitch\.tv\/popout\/[a-z0-9_]+\/chat(?:\?|$)/i.test(details.url)) {
 		return;
 	}
-	return {
-		responseHeaders: response.responseHeaders.filter(({name, value}) => {
-			const headerName = name.toLowerCase();
-			return headerName !== 'x-frame-options' && (headerName !== 'content-security-policy' || !value.toLowerCase().includes('frame-ancestors'));
-		})
-	};
+	const player = chrome.runtime.getURL('player.html');
+	const parent = details.documentUrl;
+	if (!parent || parent.split(/[?#]/, 1)[0] !== player) {
+		return;
+	}
+	const responseHeaders = [];
+	for (const header of details.responseHeaders) {
+		const name = header.name.toLowerCase();
+		if (name === 'x-frame-options') {
+			continue;
+		}
+		if (name === 'content-security-policy' && typeof header.value === 'string') {
+			const policies = header.value.split(',').map(policy =>
+				policy.split(';').map(directive => directive.trim()).filter(directive =>
+					directive && !/^frame-ancestors(?:\s|$)/i.test(directive)
+				).join('; ')
+			).filter(Boolean);
+			if (policies.length) {
+				responseHeaders.push({...header, value: policies.join(', ')});
+			}
+		} else {
+			responseHeaders.push(header);
+		}
+	}
+	return {responseHeaders};
 }, {
-	urls: [ 'https://www.twitch.tv/popout/*/chat', 'https://www.twitch.tv/embed/*/chat', 'https://www.twitch.tv/*/chat?*', 'https://www.twitch.tv/popout/' ],
-	types: [ 'sub_frame' ]
-}, headersReceivedOptions);
+	urls: ['https://www.twitch.tv/popout/*/chat*'],
+	types: ['sub_frame']
+}, ['blocking', 'responseHeaders']);
 
 chrome.runtime.onMessage.addListener((оСообщение, оОтправитель, фОтветить) => {
 	if (оСообщение.сЗапрос === 'ЗапуститьПроигрыватель' && оОтправитель.frameId === 0) {

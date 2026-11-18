@@ -2,13 +2,21 @@
   "manifest_version": 2,
   "browser_specific_settings": {
     "gecko": {
-      "id": "weave-player@alyacrush",
-      "strict_min_version": "58.0"
+      "id": "weave-chat-prototype@alyacrush",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": [
+          "authenticationInfo",
+          "browsingActivity",
+          "personallyIdentifyingInfo",
+          "websiteContent"
+        ]
+      }
     }
   },
-  "name": "Weave Player for Twitch",
+  "name": "Weave Player — Modes Preview",
   "short_name": "Weave",
-  "version": "2026.11.14.4",
+  "version": "2026.11.19.4",
   "description": "__MSG_M0001__",
   "icons": {
     "128": "manifest.svg"
@@ -21,16 +29,17 @@
     "webRequest",
     "webRequestBlocking",
     "clipboardWrite",
-    "*://*.twitch.tv/*",
-    "*://*.twitchcdn.net/*",
-    "*://*.ttvnw.net/*",
-    "*://*.jtvnw.net/*",
-    "*://*.live-video.net/*",
-    "*://*.akamaized.net/*",
-    "*://*.cloudfront.net/*"
+    "https://*.twitch.tv/*",
+    "https://*.twitchcdn.net/*",
+    "https://*.ttvnw.net/*",
+    "https://*.jtvnw.net/*",
+    "https://*.live-video.net/*",
+    "https://*.akamaized.net/*",
+    "https://*.cloudfront.net/*"
   ],
   "web_accessible_resources": [
-    "content.css"
+    "content.css",
+    "player.html"
   ],
   "background": {
     "persistent": true,
@@ -51,16 +60,6 @@
       ],
       "all_frames": true,
       "run_at": "document_idle"
-    },
-    {
-      "matches": [
-        "https://www.twitch.tv/*"
-      ],
-      "js": [
-        "gqltoken.js"
-      ],
-      "all_frames": true,
-      "run_at": "document_start"
     },
     {
       "matches": [

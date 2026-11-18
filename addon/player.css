@@ -7,3 +7,29 @@
 	box-sizing: border-box;
 	overflow: auto;
 }
+
+label[for="группачат"][hidden] { display: none; }
+
+/* Fill the iframe viewport while keeping the whole source frame visible. */
+html.weave-embedded-player,
+html.weave-embedded-player body {
+	overflow: hidden;
+}
+.weave-embedded-player #проигрыватель {
+	min-width: 0;
+	min-height: 0;
+}
+.weave-embedded-player #глаз {
+	object-fit: contain;
+}
+
+.скрытьчат #чат.weave-embedded-chat {
+	position: static;
+	visibility: visible;
+	flex: 0 1 340px;
+	width: 340px;
+	max-width: 45%;
+	min-width: 0;
+	min-height: 0;
+	background: #18181b;
+}

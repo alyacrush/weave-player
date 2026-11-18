@@ -2,7 +2,7 @@
 
 const ЭТО_CONTENT_SCRIPT = !document.currentScript;
 
-const АДРЕС_НЕ_ПЕРЕНАПРАВЛЯТЬ = 'twitch5=0';
+const АДРЕС_НЕ_ПЕРЕНАПРАВЛЯТЬ = 'weave=0';
 
 const ЛЕВАЯ_КНОПКА = 0;
 
@@ -289,10 +289,48 @@ const м_i18n = (() => {
 		}
 		return sMessageText;
 	}
+	const allowedMessageTags = new Set(['a', 'b', 'br', 'cite', 'i', 'kbd', 'li', 'p', 'strong', 'ul']);
+	function AppendMessageNodes(parent, nodes) {
+		for (const node of nodes) {
+			if (node.nodeType === Node.TEXT_NODE) {
+				parent.appendChild(document.createTextNode(node.textContent));
+				continue;
+			}
+			if (node.nodeType !== Node.ELEMENT_NODE || !allowedMessageTags.has(node.localName)) {
+				continue;
+			}
+			const element = document.createElement(node.localName);
+			if (node.localName === 'a') {
+				const href = node.getAttribute('href') || '';
+				if (href === 'about.html' || /^https:\/\//i.test(href)) {
+					element.href = href;
+					element.rel = 'noopener noreferrer';
+					if (node.getAttribute('target') === '_blank') {
+						element.target = '_blank';
+					}
+				}
+			} else if (node.localName === 'p' && node.getAttribute('data-image') === 'svg-fail') {
+				element.setAttribute('data-image', 'svg-fail');
+			}
+			AppendMessageNodes(element, node.childNodes);
+			parent.appendChild(element);
+		}
+	}
 	function FastInsertAdjacentHtmlMessage(elInsertTo, sPosition, sMessageName) {
-		
-		//! HTML content is taken from the file messages.json. See GetMessage().
-		elInsertTo.insertAdjacentHTML(sPosition, GetMessage(sMessageName));
+		const message = GetMessage(sMessageName);
+		const fragment = document.createDocumentFragment();
+		if (/[<&]/.test(message)) {
+			const parsed = new DOMParser().parseFromString(message, 'text/html');
+			AppendMessageNodes(fragment, parsed.body.childNodes);
+		} else {
+			fragment.appendChild(document.createTextNode(message));
+		}
+		if (sPosition === 'afterbegin') {
+			elInsertTo.insertBefore(fragment, elInsertTo.firstChild);
+		} else {
+			Проверить(sPosition === 'beforeend');
+			elInsertTo.appendChild(fragment);
+		}
 	}
 	function InsertAdjacentHtmlMessage(vInsertTo, sPosition, sMessageName) {
 		const elInsertTo = Узел(vInsertTo);
@@ -512,7 +550,7 @@ const м_Настройки = (() => {
 		сЦветЗаголовка: Настройка.Создать(''),
 		сЦветВыделения: Настройка.Создать(''),
 		чПрозрачность: Настройка.СоздатьДиапазон(0, 0, 80),
-		лАвтоперенаправлениеРазрешено: Настройка.Создать(true),
+		чРежимПлеера: Настройка.СоздатьДиапазон(2, 0, 2),
 		лАвтоперенаправлениеЗамечено: Настройка.Создать(false)
 	};
 	const ОТКЛАДЫВАТЬ_СОХРАНЕНИЕ_НА = ЭТО_CONTENT_SCRIPT ? 50 : 500;

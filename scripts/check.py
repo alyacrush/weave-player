@@ -12,7 +12,7 @@ assert 'WeaveDiagnostics.createReport' in player
 assert 'src=diagnostics.js' in (ROOT/'addon/player.html').read_text()
 manifest=json.loads((ROOT/'addon/manifest.json').read_text())
 assert manifest['author']=='alyacrush'
-assert manifest['browser_specific_settings']['gecko']['id']=='weave-player@alyacrush'
+assert manifest['browser_specific_settings']['gecko']['id']=='weave-chat-prototype@alyacrush'
 run(sys.executable,'scripts/build.py')
 package=ROOT/'dist'/f"weave-firefox-{manifest['version']}.xpi"
 first=hashlib.sha256(package.read_bytes()).digest()
