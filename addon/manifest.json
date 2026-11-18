@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "browser_specific_settings": {
     "gecko": {
-      "id": "weave-chat-prototype@alyacrush",
+      "id": "weave-player@alyacrush",
       "strict_min_version": "140.0",
       "data_collection_permissions": {
         "required": [
@@ -14,9 +14,9 @@
       }
     }
   },
-  "name": "Weave Player — Modes Preview",
+  "name": "Weave Player for Twitch",
   "short_name": "Weave",
-  "version": "2026.11.19.4",
+  "version": "2026.11.19.5",
   "description": "__MSG_M0001__",
   "icons": {
     "128": "manifest.svg"
