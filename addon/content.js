@@ -99,6 +99,11 @@ function разобратьАдрес(оАдрес) {
 }
 
 function observeChannelNavigation() {
+	// Reuse the navigation check for cleanup. Chat and other Twitch UI mutations
+	// don't need a separate observer over the entire document.
+	if (embeddedPlayer && !embeddedPlayer.panel.isConnected) {
+		embeddedPlayer.close();
+	}
 	const addressKey = location.pathname + location.search;
 	if (addressKey !== observedAddress) {
 		observedAddress = addressKey;
@@ -109,7 +114,7 @@ function observeChannelNavigation() {
 		}
 		cancelPendingLaunch();
 		if (previousChannel !== г_оРазобранныйАдрес.сКодКанала) {
-			closeEmbeddedPlayer?.();
+			embeddedPlayer?.close();
 		}
 		if (canAutoLaunch(г_оРазобранныйАдрес)) {
 			checkLiveChannel(г_оРазобранныйАдрес.сКодКанала);
@@ -168,9 +173,10 @@ function launchPlayer(address, automatic = false) {
 	}
 }
 
-let closeEmbeddedPlayer = null;
+let embeddedPlayer = null;
 function openEmbeddedPlayer(channel) {
-	if (closeEmbeddedPlayer) return true;
+	if (embeddedPlayer?.panel.isConnected) return true;
+	embeddedPlayer?.close();
 	const surface = document.querySelector('[data-a-target="video-player"]');
 	const video = surface?.querySelector('video');
 	if (!video || !surface.clientHeight) {
@@ -227,27 +233,20 @@ function openEmbeddedPlayer(channel) {
 	surface.addEventListener('play', pauseOriginal, true);
 	video.pause();
 	const mountedPath = location.pathname;
-	const observer = new MutationObserver(() => {
-		if (!panel.isConnected || location.pathname !== mountedPath) {
-			closeEmbeddedPlayer?.();
-		}
-	});
 	function close() {
-		observer.disconnect();
 		sizeObserver.disconnect();
 		surface.removeEventListener('play', pauseOriginal, true);
 		surface.style.position = originalPosition;
 		panel.remove();
-		closeEmbeddedPlayer = null;
+		embeddedPlayer = null;
 		if (wasPlaying && video.isConnected && location.pathname === mountedPath) {
 			video.play().catch(() => {});
 		}
 	}
-	closeEmbeddedPlayer = close;
+	embeddedPlayer = {panel, close};
 	restore.addEventListener('click', close);
 	surface.append(panel);
 	fitPanel();
-	observer.observe(document.body, {childList: true, subtree: true});
 	return true;
 }
 
@@ -276,7 +275,7 @@ function selectNextPlayerMode(event) {
 function setPlayerMode(next) {
 	cancelPendingLaunch();
 	const address = разобратьАдрес(location);
-	if (next === PLAYER_OFF) closeEmbeddedPlayer?.();
+	if (next === PLAYER_OFF) embeddedPlayer?.close();
 	if (next === playerMode()) {
 		launchPlayer(address);
 		return;
@@ -563,7 +562,7 @@ function удалитьХвостыСтаройВерсии() {
 			if (!Number.isInteger(mode) || mode < PLAYER_OFF || mode > PLAYER_PAGE || mode === playerMode()) return;
 			м_Настройки.Изменить(PLAYER_MODE_KEY, mode, true);
 			cancelPendingLaunch();
-			if (mode === PLAYER_OFF) closeEmbeddedPlayer?.();
+			if (mode === PLAYER_OFF) embeddedPlayer?.close();
 			обновитьНашуКнопку();
 		});
 		// Twitch changes the channel through History API without reloading this script.

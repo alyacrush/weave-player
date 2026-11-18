@@ -2,7 +2,7 @@
 
 const embeddedPrototype = window.top !== window;
 if (embeddedPrototype) document.documentElement.classList.add('weave-embedded-player');
-const ВЕРСИЯ_РАСШИРЕНИЯ = embeddedPrototype ? '2026.11.19.5' : chrome.runtime.getManifest().version;
+const ВЕРСИЯ_РАСШИРЕНИЯ = embeddedPrototype ? '2026.11.19.6' : chrome.runtime.getManifest().version;
 
 const ЗАГРУЖАТЬ_СПИСОК_ВАРИАНТОВ_НЕ_ДОЛЬШЕ = 3e4;
 

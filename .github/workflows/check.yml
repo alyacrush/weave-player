@@ -7,6 +7,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -19,6 +21,15 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/weave-browser-tests" --no-package-lock --no-audit --no-fund playwright@1.62.1
           "$RUNNER_TEMP/weave-browser-tests/node_modules/.bin/playwright" install --with-deps firefox
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/weave-browser-tests/node_modules/playwright" node tests/player-navigation.cjs
+      - name: Compare embedded player work in Firefox
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/weave-browser-tests/node_modules/playwright
+        run: node tests/twitch-performance.cjs 6e4a3cae39699c366f7f0a1b9edfc20336b52d65
+      - name: Decode fMP4 playback fixture in Firefox
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/weave-browser-tests/node_modules/playwright
+          WEAVE_TEST_BROWSER: firefox
+        run: node tests/playback.cjs
       - uses: actions/upload-artifact@v4
         with:
           name: weave-firefox-development
