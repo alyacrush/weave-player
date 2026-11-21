@@ -59,7 +59,7 @@ async function serveFixture(route) {
 async function waitForVideo(frame) {
 	await frame.waitForFunction(() => {
 		const video = document.querySelector('video');
-		return video?.videoWidth > 0 && video.currentTime > 0.3 && !video.paused;
+		return video?.videoWidth > 0 && video.played.length && video.played.end(0) - video.played.start(0) > 1.2 && !video.paused;
 	}, null, {timeout: 15_000});
 }
 
@@ -79,13 +79,17 @@ async function main() {
 		});
 		const worker = context.serviceWorkers()[0] || await context.waitForEvent('serviceworker', {timeout: 10_000});
 		const extensionOrigin = 'chrome-extension://' + new URL(worker.url()).hostname;
-		await worker.evaluate(() => chrome.storage.local.set({чРежимПлеера: 0, лПриглушить: true}));
+		await worker.evaluate(() => chrome.storage.local.set({
+			чВерсияНастроек: 2,
+			чРежимПлеера: 0,
+			лАвтоперенаправлениеЗамечено: true,
+		}));
 		await context.route(/https:\/\//, serveFixture);
 		const page = context.pages()[0] || await context.newPage();
 		const errors = [];
 		page.on('pageerror', error => errors.push(error.message));
 		page.on('console', msg => {
-			if (process.env.WEAVE_DEBUG && ['error','warning'].includes(msg.type())) console.log(msg.text().slice(0, 250));
+			if (['error', 'warning'].includes(msg.type())) console.log(msg.text().slice(0, 250));
 		});
 		await page.goto(channelPage);
 		const [embedded] = await Promise.all([
@@ -111,8 +115,15 @@ async function main() {
 		await chatTab.waitForURL(chatPage + '?*');
 		await chatTab.getByText('Chat fixture').waitFor();
 		assert.equal(await page.locator('iframe#чат').count(), 0);
+		await chatTab.close();
+		await page.locator('#переключитьтрансляцию').click();
+		await page.locator('body[data-состояние="8"]').waitFor();
+		await page.locator('#шкала').click({position: {x: 12, y: 5}});
+		await page.locator('#переключитьпаузу').click();
+		await page.waitForFunction(() => !document.querySelector('video').paused);
+
 		assert.deepEqual(errors, []);
-		console.log('PASS: Chromium MV3 loads, plays fixture video in both modes, restores Twitch, and opens official chat');
+		console.log('PASS: Chromium MV3 loads, plays fixture video in both modes, restores Twitch, opens official chat, and replays buffered video');
 	} finally {
 		await context?.close();
 		fs.rmSync(root, {recursive: true, force: true});

@@ -3085,7 +3085,8 @@ const м_Управление = (() => {
 		ИзменитьСостояние,
 		получитьСкоростьПовтора,
 		ОбновитьКоличествоДорожек,
-		ОстановитьПросмотрТрансляции
+		ОстановитьПросмотрТрансляции,
+		ОбновитьГромкость
 	};
 })();
 
@@ -3476,7 +3477,20 @@ const м_Проигрыватель = (() => {
 			ПоказатьСостояние('Окак', 'Начало воспроизведения');
 			_лЖдатьЗаполненияБуфера = true;
 			_лПропуститьWaiting = _oMediaElement.readyState < HTMLMediaElement.HAVE_FUTURE_DATA;
-			_oMediaElement.play();
+			const playback = _oMediaElement.play();
+			if (isChromeBuild) {
+				playback.catch(ДобавитьОбработчикИсключений(error => {
+					if (error.name === 'AbortError') return;
+					if (error.name !== 'NotAllowedError' || _oMediaElement.muted) throw error;
+					// Chrome may require a gesture for sound when opening a new player.
+					м_Настройки.Изменить('лПриглушить', true, true);
+					ПрименитьГромкость();
+					м_Управление.ОбновитьГромкость();
+					return _oMediaElement.play();
+				})).catch(ДобавитьОбработчикИсключений(error => {
+					if (error.name !== 'AbortError') м_Отладка.ПойманоИсключение(error);
+				}));
+			}
 			м_Управление.ИзменитьСостояние(СОСТОЯНИЕ_НАЧАЛО_ВОСПРОИЗВЕДЕНИЯ);
 		}
 	}
@@ -3813,6 +3827,10 @@ const м_Проигрыватель = (() => {
 			_oMediaElement.addEventListener(сСобытие, СледитьЗаСобытиямиMediaElement);
 		}
 		Проверить(_oMediaElement.paused);
+		if (isChromeBuild) {
+			подключитьMediaSourceКMediaElement();
+			return true;
+		}
 		_oMediaElement.play();
 		if (!_oMediaElement.paused) {
 			_oMediaElement.pause();
