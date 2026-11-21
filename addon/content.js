@@ -350,7 +350,7 @@ function вставитьНашуКнопку() {
 		</div>
 		<button type="button" id="tw5-автоперенаправление">
 			<svg viewBox="0 0 128 128" aria-hidden="true">
-				<path d="M20 34 41 94 64 42 87 94 108 34" fill="none" stroke="currentColor" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/>
+				<path d="M15 35H30L43 72L57 40Q59 35 64 35H66Q71 35 73 40L86 72L100 35H115L93 92Q91 97 86 97Q81 97 79 92L64 58L49 92Q47 97 42 97Q37 97 35 92Z" fill="currentColor"/>
 			</svg>
 		</button>
 		<div class="tw5-подсказка"></div>
