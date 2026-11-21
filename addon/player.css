@@ -40,3 +40,71 @@ html.weave-embedded-player body {
 	height: 1.125rem;
 	vertical-align: middle;
 }
+
+/* Chromium paints its range track and thumb through separate selectors. */
+#громкость::-webkit-slider-runnable-track {
+	height: .25rem;
+	border-radius: .0625rem;
+	background: linear-gradient(to right,
+		currentColor var(--volume-fill, 0%),
+		rgba(var(--сЦветКнопок), .5) var(--volume-fill, 0%));
+}
+
+#громкость::-webkit-slider-thumb {
+	appearance: none;
+	width: .875rem;
+	height: .875rem;
+	margin-top: -.3125rem;
+	border: 0;
+	border-radius: 50%;
+	background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, .25)), currentColor;
+	box-shadow: 0 0 .0625rem #000;
+}
+
+::selection {
+	color: #000;
+	background-color: rgb(var(--сЦветВыделения));
+	text-shadow: none;
+}
+
+.нижняя :is(button, input, select):focus-visible {
+	outline: 2px solid currentColor;
+	outline-offset: -2px;
+}
+
+#проигрыватель {
+	container-type: inline-size;
+}
+
+@container (max-width: 540px) {
+	.нижняя .элементпанели {
+		padding-inline: .25rem;
+	}
+
+	.нижняя .кнопка {
+		width: 1.875rem;
+	}
+
+	#громкость {
+		min-width: 2.75rem;
+	}
+
+	#скорость {
+		margin-inline: .25rem;
+	}
+
+	#шкала {
+		min-width: 2.5rem;
+	}
+}
+
+@container (max-width: 360px) {
+	.нижняя {
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+
+	.нижняя .кнопка {
+		width: 1.625rem;
+	}
+}

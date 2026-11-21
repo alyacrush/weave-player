@@ -81,6 +81,24 @@ async function waitForVideo(frame) {
 	}
 }
 
+async function checkPlayerControls(page, frame) {
+	const volume = frame.locator('[id="громкость"]');
+	await frame.locator('video').hover();
+	await volume.fill('75');
+	assert.equal(await frame.locator('video').evaluate(video => video.volume), 0.75);
+	assert.ok(Math.abs(await volume.evaluate(input =>
+		Number.parseFloat(input.style.getPropertyValue('--volume-fill'))) - 74 / 99 * 100) < 0.01);
+	await page.setViewportSize({width: 420, height: 760});
+	const fullscreen = frame.locator('[id="переключитьполноэкранный"]');
+	const inBounds = await fullscreen.evaluate(button => {
+		const panel = button.closest('.нижняя');
+		return button.getBoundingClientRect().right <= panel.getBoundingClientRect().right + 1
+			&& panel.scrollWidth <= panel.clientWidth + 1;
+	});
+	assert.equal(inBounds, true, 'the compact controls still fit');
+	await page.setViewportSize({width: 1280, height: 760});
+}
+
 async function main() {
 	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'weave-chrome-'));
 	let context;
@@ -120,6 +138,10 @@ async function main() {
 		assert.ok(embedded, 'the extension frame loads in the channel page');
 		assert.equal(page.url(), channelPage);
 		await waitForVideo(embedded);
+		await page.locator('[data-a-target="video-player"]').evaluate(player => {
+			player.style.width = '100%';
+		});
+		await checkPlayerControls(page, embedded);
 		await page.locator('[data-weave-diagnostic="playing"]').waitFor({timeout: 5000});
 		await page.getByText('Native Twitch chat').waitFor();
 		await page.getByRole('button', {name: /restore twitch player/i}).click();
@@ -129,6 +151,7 @@ async function main() {
 		await page.locator('[data-weave-mode="2"]').click();
 		await page.waitForURL(extensionOrigin + '/player.html?channel=testchannel');
 		await waitForVideo(page);
+		await checkPlayerControls(page, page);
 		const chat = context.waitForEvent('page');
 		await page.locator('#переключитьчат').click();
 		const chatTab = await chat;
@@ -138,6 +161,8 @@ async function main() {
 		await chatTab.close();
 		await page.locator('#переключитьтрансляцию').click();
 		await page.locator('body[data-состояние="8"]').waitFor();
+		await checkPlayerControls(page, page);
+		console.log('PASS: volume updates and compact controls fit in embedded, standalone and replay modes');
 		await page.locator('#шкала').click({position: {x: 12, y: 5}});
 		await page.locator('#переключитьпаузу').click();
 		await page.waitForFunction(() => !document.querySelector('video').paused);
