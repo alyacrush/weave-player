@@ -116,7 +116,8 @@ async function main() {
 		await waitForVideo(embedded);
 		await page.getByText('Native Twitch chat').waitFor();
 		await page.getByRole('button', {name: /restore twitch player/i}).click();
-		assert.equal(page.frames().length, 1);
+		await page.locator('iframe[src*="player.html?embedded=1"]').waitFor({state: 'detached'});
+		assert.equal(page.url(), channelPage);
 
 		await page.locator('[data-weave-mode="2"]').click();
 		await page.waitForURL(extensionOrigin + '/player.html?channel=testchannel');
