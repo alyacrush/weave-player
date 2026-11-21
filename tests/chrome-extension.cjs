@@ -54,13 +54,7 @@ async function serveFixture(route) {
 			? playlist().replace('#EXT-X-MAP', '#EXT-X-KEY:METHOD=SAMPLE-AES,URI="mock"\n#EXT-X-MAP')
 			: name === 'live.m3u8' ? playlist() : fixture(name);
 		await route.fulfill({headers, body});
-	} else if (url.href === blockedFramePage) {
-		await route.fulfill({
-			contentType: 'text/html',
-			headers: {'content-security-policy': "frame-src 'none'"},
-			body: showNativePlayer,
-		});
-	} else if (url.href === invalidMediaPage || url.href === channelPage || url.href.startsWith(channelPage + '?')) {
+	} else if (url.href === blockedFramePage || url.href === invalidMediaPage || url.href === channelPage || url.href.startsWith(channelPage + '?')) {
 		await route.fulfill({contentType: 'text/html', body: showNativePlayer});
 	} else if (url.href.startsWith(chatPage + '?')) {
 		await route.fulfill({contentType: 'text/html', body: '<title>Twitch chat</title><p>Chat fixture</p>'});
@@ -155,14 +149,28 @@ async function main() {
 		const errorStatus = page.locator('[data-weave-diagnostic="error"]');
 		await errorStatus.waitFor({timeout: 12000});
 		assert.match(await errorStatus.innerText(), /encrypted.*J0219/);
+		await page.frameLocator('iframe[src*="player.html?embedded=1"]')
+			.frameLocator('iframe[src="report.html"]')
+			.getByText(/This broadcast is encrypted/).waitFor({timeout: 5000});
 
+		await page.addInitScript(blockedPath => {
+			if (location.pathname !== blockedPath) return;
+			// Keep the iframe element mounted but prevent its player document from starting.
+			const observer = new MutationObserver(() => {
+				const frame = document.querySelector('iframe[src*="player.html?embedded=1"]');
+				if (!frame) return;
+				observer.disconnect();
+				frame.src = 'about:blank';
+			});
+			observer.observe(document, {subtree: true, childList: true});
+		}, new URL(blockedFramePage).pathname);
 		await page.goto(blockedFramePage);
 		await page.locator('[data-weave-mode="1"]').click();
 		await page.locator('[data-weave-diagnostic="frame"]').waitFor({timeout: 5000});
 		await page.evaluate(origin => {
 			const data = {type: 'weave-embedded-status', phase: 'playing'};
 			window.postMessage(data, location.origin);
-			const frame = document.querySelector('iframe[src*="player.html?embedded=1"]');
+			const frame = document.querySelector('iframe[src="about:blank"]');
 			window.dispatchEvent(new MessageEvent('message', {data, origin, source: frame.contentWindow}));
 		}, extensionOrigin);
 		await page.locator('[data-weave-diagnostic="frame-timeout"]').waitFor({timeout: 14000});

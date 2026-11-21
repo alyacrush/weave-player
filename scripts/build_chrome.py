@@ -28,7 +28,7 @@ def build():
         "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'none'"
     }
     manifest["web_accessible_resources"] = [{
-        "resources": manifest["web_accessible_resources"],
+        "resources": [*manifest["web_accessible_resources"], "report.html"],
         "matches": ["https://www.twitch.tv/*", "https://m.twitch.tv/*"],
     }]
     out = ROOT / "dist" / f"weave-chrome-{manifest['version']}.zip"
