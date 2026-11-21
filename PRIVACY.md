@@ -1,22 +1,26 @@
-# Data handling — development draft
+# Weave privacy notes
 
-Maintainer: alyacrush. Status: incomplete audit, not yet store-submission ready.
+These notes describe the Firefox build 2026.11.19.5.
 
-The player requests Twitch APIs, authentication/integrity information and media
-playlists/segments required for playback. The embedded chat loads Twitch content
-and can use the browser's Twitch session. Treat Twitch and media CDN traffic as
-third-party data processing; this project does not claim zero data transmission.
+## Watching a stream
 
-Settings are stored in extension storage. The inherited runtime can keep detailed
-logs, playlist URLs and playback tokens in memory for debugging. Do not copy these
-raw values into issues. Storage fields and retention still need a complete audit.
+Weave sends the channel name and a device identifier to Twitch. It requests
+stream details and playback tokens from Twitch. The player uses these tokens to
+get playlists and video from Twitch and its media servers. Weave sends ad
+playback events to Twitch when a playlist contains the data for those events.
 
-Upstream crash/feedback upload and upstream version checks have been disabled.
-There is no new maintainer telemetry endpoint. Manual diagnostic export creates a
-local JSON file containing only schema, extension version, Firefox version and
-report category. It does not include channel, URLs, tokens, logs, email or media.
-The extension does not submit this file; users decide whether to share it.
+The standalone player reads Twitch cookies from the current Firefox profile.
+If you are signed in to Twitch, some Twitch API requests use your Twitch
+authentication token. The Twitch chat panel uses the Twitch session in your
+browser. Twitch handles chat messages under its [privacy policy][twitch].
 
-No proxy functionality exists in this version. Adding a proxy will require a new
-network/data review and appropriate disclosure/control. Before store submission,
-complete the API/domain inventory, classification and consent implementation.
+## Settings and reports
+
+Weave stores its settings in Firefox. The player can keep temporary playback
+logs that contain URLs and tokens. Keep raw playback logs out of GitHub issues.
+
+The diagnostic export saves a JSON file on your device. It contains the report
+format, Weave version, browser version, and report category. Weave has no
+maintainer telemetry or report upload service.
+
+[twitch]: https://www.twitch.tv/p/en/legal/privacy-notice/

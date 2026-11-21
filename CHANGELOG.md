@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026.11.19.5 — Firefox preview
+
+- Choose Weave on the Twitch channel page or on a separate player page.
+- Keep Twitch chat beside the video in either mode.
+- Resize the embedded player when the Twitch layout changes.
+- Open Twitch menu links in a new tab from the embedded player.
+- Use Firefox 140 or later. Mozilla signed this build for self-distribution.
+
 ## 2026.11.14.4 — Twitch toolbar icon
 
 - Replace the old 5 in the Twitch toolbar with the Weave W.
