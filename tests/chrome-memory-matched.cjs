@@ -7,7 +7,7 @@ const {setTimeout: sleep} = require('node:timers/promises');
 const {chromium} = require(process.env.PLAYWRIGHT_MODULE);
 const profile = path.join(process.env.RUNNER_TEMP, 'memory-profile');
 const extension = process.argv[2];
-const nativeVideo = '[data-a-target="video-player"] video';
+const nativeVideo = '[data-a-target="video-player"] video[aria-label="Twitch video player"]';
 const weaveVideo = '#глаз';
 
 function processMemory() {
