@@ -1,0 +1,40 @@
+name: Matched playback memory in Chrome
+on:
+  push:
+    branches: [experiment/chrome-memory-matched]
+permissions:
+  contents: read
+jobs:
+  measure:
+    name: ${{ matrix.mode }} / replay ${{ matrix.replay }} s
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {mode: native, replay: 0}
+          - {mode: embedded, replay: 60}
+          - {mode: embedded, replay: 30}
+          - {mode: standalone, replay: 60}
+          - {mode: standalone, replay: 30}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '22'
+      - name: Install Chrome for Testing
+        run: |
+          npm install --prefix "$RUNNER_TEMP/weave-memory" --no-package-lock --no-audit --no-fund playwright@1.62.1
+          "$RUNNER_TEMP/weave-memory/node_modules/playwright/cli.js" install --with-deps chromium
+          python3 -m zipfile -e "$(python3 scripts/build_chrome.py)" "$RUNNER_TEMP/extension"
+      - name: Measure 10 minutes of 720p60 playback
+        env:
+          WEAVE_MODE: ${{ matrix.mode }}
+          WEAVE_REPLAY: ${{ matrix.replay }}
+          WEAVE_CHANNEL: zizaran
+        run: |
+          export PLAYWRIGHT_MODULE="$RUNNER_TEMP/weave-memory/node_modules/playwright"
+          node tests/chrome-memory-matched.cjs "$RUNNER_TEMP/extension"
