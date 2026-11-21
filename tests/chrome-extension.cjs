@@ -154,12 +154,17 @@ async function main() {
 		await page.locator('[data-weave-mode="1"]').click();
 		const errorStatus = page.locator('[data-weave-diagnostic="error"]');
 		await errorStatus.waitFor({timeout: 12000});
-		assert.match(await errorStatus.innerText(), /J0219/);
+		assert.match(await errorStatus.innerText(), /encrypted.*J0219/);
 
 		await page.goto(blockedFramePage);
 		await page.locator('[data-weave-mode="1"]').click();
 		await page.locator('[data-weave-diagnostic="frame"]').waitFor({timeout: 5000});
-		await page.evaluate(() => window.postMessage({type: 'weave-embedded-status', phase: 'playing'}, location.origin));
+		await page.evaluate(origin => {
+			const data = {type: 'weave-embedded-status', phase: 'playing'};
+			window.postMessage(data, location.origin);
+			const frame = document.querySelector('iframe[src*="player.html?embedded=1"]');
+			window.dispatchEvent(new MessageEvent('message', {data, origin, source: frame.contentWindow}));
+		}, extensionOrigin);
 		await page.locator('[data-weave-diagnostic="frame-timeout"]').waitFor({timeout: 14000});
 		await page.getByRole('button', {name: /restore twitch player/i}).click();
 		await page.locator('[data-weave-diagnostic]').waitFor({state: 'detached'});

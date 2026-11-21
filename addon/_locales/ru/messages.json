@@ -1153,6 +1153,15 @@
   "WeaveEmbedError": {
     "message": "В Weave возникла ошибка воспроизведения."
   },
+  "WeaveEmbedCodecError": {
+    "message": "Chrome не смог декодировать видео или звук."
+  },
+  "WeaveEmbedRegionError": {
+    "message": "Twitch сообщает, что этот эфир недоступен в вашем регионе."
+  },
+  "WeaveEmbedProtectedError": {
+    "message": "Эфир зашифрован. Для просмотра используйте плеер Twitch."
+  },
   "WeavePlayerFrame": {
     "message": "Плеер Weave"
   },

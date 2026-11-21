@@ -1140,6 +1140,15 @@
   "WeaveEmbedError": {
     "message": "Weave encountered a playback error."
   },
+  "WeaveEmbedCodecError": {
+    "message": "Chrome could not decode the video or audio."
+  },
+  "WeaveEmbedRegionError": {
+    "message": "Twitch reports that this stream is unavailable in your region."
+  },
+  "WeaveEmbedProtectedError": {
+    "message": "This stream is encrypted. Use the Twitch player to watch it."
+  },
   "WeavePlayerFrame": {
     "message": "Weave player"
   },

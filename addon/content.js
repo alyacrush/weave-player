@@ -180,6 +180,13 @@ const embeddedStatusMessages = {
 	error: 'WeaveEmbedError'
 };
 
+const embeddedErrorMessages = {
+	J0201: 'WeaveEmbedCodecError',
+	J0217: 'WeaveEmbedRegionError',
+	J0219: 'WeaveEmbedProtectedError',
+	J_FMP4_UNSUPPORTED: 'J_FMP4_UNSUPPORTED'
+};
+
 function monitorEmbeddedPlayer(frame, row) {
 	const status = document.createElement('span');
 	status.setAttribute('role', 'status');
@@ -197,7 +204,7 @@ function monitorEmbeddedPlayer(frame, row) {
 		if (phase === lastPhase && !code) return;
 		lastPhase = phase;
 		clearTimeout(timer);
-		show(phase, embeddedStatusMessages[phase], code);
+		show(phase, embeddedErrorMessages[code] || embeddedStatusMessages[phase], code);
 		if (phase === 'frame') {
 			timer = setTimeout(() => show('frame-timeout', 'WeaveEmbedFrameTimeout'), 10000);
 		} else if (phase === 'starting' || phase === 'buffering') {
@@ -205,7 +212,7 @@ function monitorEmbeddedPlayer(frame, row) {
 		}
 	}
 	function receive(event) {
-		if (event.origin !== extensionOrigin || event.source !== frame.contentWindow ||
+		if (!event.isTrusted || event.origin !== extensionOrigin || event.source !== frame.contentWindow ||
 			event.data?.type !== 'weave-embedded-status') return;
 		const {phase, code} = event.data;
 		if (typeof phase !== 'string' || phase === 'frame' || !Object.hasOwn(embeddedStatusMessages, phase)) return;
