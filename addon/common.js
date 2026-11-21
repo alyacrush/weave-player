@@ -148,11 +148,6 @@ function создатьТелоЗапросаGql(сЗапрос, оПереме�
 	return `{"query":${JSON.stringify(сЗапрос)},"variables":${JSON.stringify(оПеременные)}}`;
 }
 
-function объединитьЗапросыGql(мсТелаЗапросов) {
-	Проверить(мсТелаЗапросов[0][0] === '{');
-	return `[${мсТелаЗапросов.join(',')}]`;
-}
-
 function ПолучитьАдресНашегоПроигрывателя(сКодКанала) {
 	const сПараметры = '?channel=' + encodeURIComponent(сКодКанала);
 	if (ЭТО_CONTENT_SCRIPT) {

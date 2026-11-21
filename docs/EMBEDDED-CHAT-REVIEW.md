@@ -1,20 +1,26 @@
-# Mozilla reviewer notes — Weave Player for Twitch 2026.11.19.5
+# Mozilla review notes — Weave Player for Twitch 2026.11.21.1
 
-This update adds a mode that replaces only the Twitch video player on a channel's
-page, alongside Twitch's existing chat. Weave also offers a standalone player page.
-Use the W control on twitch.tv to select a mode and test it on a live channel.
-In the embedded mode, open the player menu with right-click and select Following
-to verify that it opens in a separate tab while the video stays in place.
+Open a live Twitch channel in desktop Firefox 140 or later. Use the W control
+on Twitch to select a mode. Both modes are in the release. Ordinary public
+streams play without a Twitch account.
 
-The standalone mode embeds Twitch's native popout chat. As in 2026.11.14.8, the
-handler in addon/background.js removes X-Frame-Options and the CSP frame-ancestors
-directive only for the exact Twitch popout chat URL pattern in a direct child
-frame of the extension's own top-level player.html. Other CSP directives are
-retained. We explicitly disclose this behavior for Mozilla's review.
+- **Player on Twitch** replaces the video player on the channel page. The
+  page keeps its existing Twitch chat. Right-click Weave and select Following
+  to verify that the link opens in a new tab.
+- **Standalone Weave page** shows the video on a separate extension page.
+  Use the chat button to open Twitch's official popout chat beside the video.
+  Chat sign-in and messaging follow Twitch's normal requirements.
 
-Playback of ordinary public streams can be tested without a Twitch account.
-Chat login and chat submission follow Twitch's normal requirements.
+For the standalone chat only, `addon/background.js` removes
+`X-Frame-Options` and the `frame-ancestors` CSP directive. The handler
+requires a matching Twitch popout chat URL in a direct child frame of the
+extension's own top-level player page. Other CSP directives are preserved.
+This is the same handler disclosed with unlisted version 2026.11.19.5.
 
-Build with python3 scripts/build.py. Run python3 scripts/check.py for local
-checks (Node.js 22 and Python 3.12). The inherited WASM source and rebuild
-instructions are in addon/sources/.
+This version removes ad event reports and automatic channel points clicks.
+The report button exports a minimal local JSON file. See `PRIVACY.md` for
+Twitch requests and local storage.
+
+Build with `python3 scripts/build.py`. Run `python3 scripts/check.py` with
+Node.js 22 and Python 3.12. The WebAssembly source and rebuild instructions
+are in `addon/sources/`.

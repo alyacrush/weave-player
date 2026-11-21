@@ -13,7 +13,7 @@ Open a live channel on Twitch. Use the controls next to **W** to choose a mode.
 
 ## Try the Firefox preview
 
-Mozilla signed version `2026.11.19.5` for self-distribution. If you have the
+Mozilla signed the earlier `2026.11.19.5` preview for self-distribution. If you have the
 signed `.xpi`, open `about:addons`. Open the gear menu and select
 **Install Add-on From File…**. Select the `.xpi`.
 

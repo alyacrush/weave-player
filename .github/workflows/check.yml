@@ -1,25 +1,44 @@
 name: Check and package
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+  pull_request:
+  workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '22'
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12'
       - run: python scripts/check.py
-      - name: Test player navigation in Firefox
+      - name: Test navigation and playback in Firefox
         run: |
           npm install --prefix "$RUNNER_TEMP/weave-browser-tests" --no-package-lock --no-audit --no-fund playwright@1.62.1
-          "$RUNNER_TEMP/weave-browser-tests/node_modules/.bin/playwright" install --with-deps firefox
-          PLAYWRIGHT_MODULE="$RUNNER_TEMP/weave-browser-tests/node_modules/playwright" node tests/player-navigation.cjs
-      - uses: actions/upload-artifact@v4
+          export PLAYWRIGHT_MODULE="$RUNNER_TEMP/weave-browser-tests/node_modules/playwright"
+          "$PLAYWRIGHT_MODULE/cli.js" install --with-deps firefox
+          node tests/player-navigation.cjs
+          WEAVE_TEST_BROWSER=firefox node tests/playback.cjs
+      - name: Pack source for review
+        if: github.event_name != 'pull_request'
+        run: |
+          version=$(python -c 'import json; print(json.load(open("addon/manifest.json"))["version"])')
+          git archive --format=zip -o "dist/weave-firefox-$version-source.zip" HEAD
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: github.event_name != 'pull_request'
         with:
-          name: weave-firefox-development
+          name: weave-firefox-unsigned-and-source
           path: dist/*
+          retention-days: 14

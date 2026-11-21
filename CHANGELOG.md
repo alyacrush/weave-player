@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.11.21.1 — Firefox release candidate
+
+- Remove ad event reports and automatic channel points clicks.
+- Keep diagnostic exports local. Stop collecting hardware details for reports.
+- Read only the two Twitch cookies used by the standalone player.
+- Replace inherited player icons with Lucide icons.
+
 ## 2026.11.19.5 — Firefox preview
 
 - Choose Weave on the Twitch channel page or on a separate player page.

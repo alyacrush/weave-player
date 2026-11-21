@@ -8,6 +8,9 @@ for test in ['test.cjs','worker.cjs','diagnostics.cjs']: run('node','tests/'+tes
 player=(ROOT/'addon/player.js').read_text()
 assert 'report3.php' not in player
 assert 'tw5/version.json' not in player
+for obsolete in ('recordAdEvent', 'chrome.system.', 'WEBGL_debug_renderer_info'):
+    assert obsolete not in player, obsolete
+assert not (ROOT/'addon/autoclaim.js').exists()
 assert 'WeaveDiagnostics.createReport' in player
 assert 'src=diagnostics.js' in (ROOT/'addon/player.html').read_text()
 manifest=json.loads((ROOT/'addon/manifest.json').read_text())
@@ -20,5 +23,7 @@ run(sys.executable,'scripts/build.py');assert hashlib.sha256(package.read_bytes(
 with zipfile.ZipFile(package) as z:
  assert z.testzip() is None
  assert z.read('LICENSE')==(ROOT/'LICENSE').read_bytes()
+ assert b'ISC License' in z.read('sources/LUCIDE-LICENSE.txt')
+ assert b'The MIT License' in z.read('sources/LUCIDE-LICENSE.txt')
  assert not any(n.startswith('META-INF/') for n in z.namelist())
 print('PASS: syntax, metadata, legacy endpoint removal and deterministic package')

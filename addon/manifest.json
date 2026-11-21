@@ -16,7 +16,7 @@
   },
   "name": "Weave Player for Twitch",
   "short_name": "Weave",
-  "version": "2026.11.19.5",
+  "version": "2026.11.21.1",
   "description": "__MSG_M0001__",
   "icons": {
     "128": "manifest.svg"
@@ -48,19 +48,6 @@
     ]
   },
   "content_scripts": [
-    {
-      "matches": [
-        "https://www.twitch.tv/*"
-      ],
-      "exclude_matches": [
-        "https://www.twitch.tv/popout/"
-      ],
-      "js": [
-        "autoclaim.js"
-      ],
-      "all_frames": true,
-      "run_at": "document_idle"
-    },
     {
       "matches": [
         "https://www.twitch.tv/*",
