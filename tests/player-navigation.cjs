@@ -83,9 +83,70 @@ async function main() {
 		await standalone.locator('#главноеменю a[href="https://www.twitch.tv/directory/following"]').click();
 		await standalone.waitForURL('https://www.twitch.tv/directory/following');
 		console.log('PASS: embedded player menu links, keyboard replay link, and standalone navigation');
+		await checkLocalization(browser);
 	} finally {
 		await browser.close();
 	}
+}
+
+
+async function checkLocalization(browser) {
+	const commonScript = fs.readFileSync('addon/common.js', 'utf8');
+	const aboutMarkup = fs.readFileSync('addon/about.html', 'utf8');
+	const aboutScript = fs.readFileSync('addon/about.js', 'utf8');
+	const aboutUrl = new URL('about.html', playerUrl).href;
+	const commonUrl = new URL('common.js', playerUrl).href;
+	const aboutScriptUrl = new URL('about.js', playerUrl).href;
+	const playerWithoutPrefetch = playerMarkup.replace(/<link rel=(?:dns-prefetch|preconnect)[^>]*>/g, '');
+
+	for (const lang of ['en', 'ru']) {
+		const catalog = JSON.parse(fs.readFileSync(`addon/_locales/${lang}/messages.json`, 'utf8'));
+		const context = await browser.newContext({locale: lang});
+		try {
+			// Supply the selected catalog at the extension API boundary.
+			await context.addInitScript(messages => {
+				window.chrome = {i18n: {getMessage: key => messages[key]?.message || ''}};
+			}, catalog);
+			await context.route('**/*', route => {
+				switch (route.request().url()) {
+				  case hostUrl:
+					return route.fulfill({contentType: 'text/html', body: `<iframe src="${embeddedUrl}"></iframe>`});
+				  case embeddedUrl:
+				  case playerUrl:
+					return route.fulfill({contentType: 'text/html', body: playerWithoutPrefetch});
+				  case aboutUrl:
+					return route.fulfill({contentType: 'text/html', body: aboutMarkup});
+				  case commonUrl:
+					return route.fulfill({contentType: 'text/javascript', body: commonScript});
+				  case aboutScriptUrl:
+					return route.fulfill({contentType: 'text/javascript', body: aboutScript});
+				  default:
+					return route.abort();
+				}
+			});
+			const page = await context.newPage();
+			await page.goto(hostUrl);
+			const frame = page.frames().find(candidate => candidate.url() === embeddedUrl);
+			assert.ok(frame);
+			await checkPlayerLanguage(frame, lang, catalog);
+			await page.goto(playerUrl);
+			await checkPlayerLanguage(page, lang, catalog);
+			await page.goto(aboutUrl);
+			assert.equal(await page.title(), catalog.WeaveAboutTitle.message);
+			assert.equal(await page.locator('html').getAttribute('lang'), lang);
+			assert.equal(await page.locator('[data-i18n=WeaveAboutData]').textContent(), catalog.WeaveAboutData.message);
+		} finally {
+			await context.close();
+		}
+	}
+	console.log('PASS: English and Russian player settings, statistics, and About page');
+}
+
+async function checkPlayerLanguage(document, lang, catalog) {
+	await document.evaluate(() => м_i18n.TranslateDocument(window.document));
+	assert.equal(await document.locator('html').getAttribute('lang'), lang);
+	assert.equal(await document.locator('[data-i18n="F0682^A0682"]').textContent(), catalog.F0682.message);
+	assert.equal(await document.locator('[data-i18n="^StatTip01"]').getAttribute('title'), catalog.StatTip01.message);
 }
 
 function showMenu(pageOrFrame) {

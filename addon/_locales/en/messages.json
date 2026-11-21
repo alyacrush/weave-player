@@ -518,7 +518,7 @@
     "message": "Help.\nThe F1 key on the keyboard."
   },
   "J0600": {
-    "message": "Choose a mode to apply it on the current channel. Click W to launch the selected player."
+    "message": "Right-click W to switch modes. On a live channel, left-click W to open Weave in the selected mode. When Weave is off, left-click has no effect."
   },
   "J0601": {
     "message": "Mode: Off"
@@ -531,6 +531,15 @@
   },
   "J0604": {
     "message": "Weave player mode"
+  },
+  "F0681": {
+    "message": "Extra features"
+  },
+  "F0682": {
+    "message": "Automatically claim bonus Channel Points"
+  },
+  "A0682": {
+    "message": "Weave clicks the bonus button when it appears in a Twitch tab. Off by default."
   },
   "F0604": {
     "message": "All Settings"
@@ -1003,7 +1012,7 @@
     "description": "Новость."
   },
   "F1079": {
-    "message": "<p>Fixed earning of Drops, Channel Points и Watch Streak.</p><p>“Rewatch this broadcast” item in the player menu remains available after the broadcast ends.</p><p>Double-clicking the chat edge restores the chat size.</p>"
+    "message": "<p>Fixed earning of Drops, Channel Points and Watch Streak.</p><p>“Rewatch this broadcast” item in the player menu remains available after the broadcast ends.</p><p>Double-clicking the chat edge restores the chat size.</p>"
   },
   "F1080": {
     "message": "<p>The Privacy Badger browser extension broke the chat in my player again. To fix the chat, click “Useful information” in the player menu.</p>",
@@ -1094,5 +1103,110 @@
   },
   "J_FMP4_UNSUPPORTED": {
     "message": "This fMP4 variant is not supported by this test build. Try another quality or open the stream on Twitch."
+  },
+  "RestoreTwitchPlayer": {
+    "message": "Restore Twitch player"
+  },
+  "WeavePlayerFrame": {
+    "message": "Weave player"
+  },
+  "TwitchChatFrame": {
+    "message": "Twitch chat"
+  },
+  "WeaveReportTitle": {
+    "message": "Weave local report"
+  },
+  "WeaveReportNotice": {
+    "message": "This report stays on your device. It contains the extension version, Firefox version, and report type. Save it and describe the problem separately."
+  },
+  "WeaveReportDownload": {
+    "message": "Download report"
+  },
+  "WeaveReportReload": {
+    "message": "Reload player"
+  },
+  "WeaveAboutTitle": {
+    "message": "About Weave"
+  },
+  "WeaveAboutProject": {
+    "message": "Weave is an independent Firefox extension maintained by alyacrush."
+  },
+  "WeaveAboutCredits": {
+    "message": "Based on Alternate Player for Twitch.tv by Alexander Choporov (CoolCmd)."
+  },
+  "WeaveAboutLicense": {
+    "message": "License and third-party notices"
+  },
+  "WeaveAboutPrivacy": {
+    "message": "Privacy"
+  },
+  "WeaveAboutData": {
+    "message": "Weave uses Twitch and its media servers to play streams. Twitch handles sign-in and chat. Settings and diagnostic reports stay on your device. Weave has no analytics service or automatic report upload."
+  },
+  "StatTip01": {
+    "message": "Source video width × height @ average frame rate ± maximum deviation from the average. Frame rate and deviation are calculated for each segment."
+  },
+  "StatTip02": {
+    "message": "Video compression: codec, profile, level, maximum reference frames, range, and frame rate."
+  },
+  "StatTip03": {
+    "message": "Audio compression: codec, sample rate, channel count, and bitrate. Bitrate is calculated for each segment. With HE-AAC, the other values may be inaccurate even when playback works."
+  },
+  "StatTip04": {
+    "message": "The server that delivers the video."
+  },
+  "StatTip05": {
+    "message": "Segment count × average segment duration = playlist duration. Also shows the number of ad segments and the target duration."
+  },
+  "StatTip06": {
+    "message": "Video duration at each stage:\n\nWaiting to download + downloading\nWaiting to enter the player\nUnplayed in the player buffer + already played in the player buffer"
+  },
+  "StatTip07": {
+    "message": "Time between playlist downloads.\n\nMinimum < average < maximum. The table shows recent values, with the newest highlighted in red."
+  },
+  "StatTip08": {
+    "message": "Number of new segments in each downloaded playlist.\n\nMinimum < average < maximum. The table shows recent values, with the newest highlighted in red."
+  },
+  "StatTip09": {
+    "message": "Duration of new segments in each downloaded playlist.\n\nMinimum < average < maximum. The table shows recent values, with the newest highlighted in red."
+  },
+  "StatTip10": {
+    "message": "Total bitrate of video, audio, and other data in a downloaded segment. The audio bitrate is shown above.\n\nMinimum < average < maximum. The table shows recent values, with the newest highlighted in red. A missing value means the segment did not download."
+  },
+  "StatTip11": {
+    "message": "Segment download speed, including time waiting for the server. For continuous playback, average download speed should meet or exceed the average segment bitrate. The combined speed can be higher when several segments download in parallel.\n\nMinimum < average < maximum. The table shows recent values, with the newest highlighted in red. A missing value means the segment did not download."
+  },
+  "StatTip12": {
+    "message": "Time from requesting a segment to receiving the start of the response. Distance to the server and server load affect this time.\n\nMinimum < average < maximum. The table shows recent values, with the newest highlighted in red. A missing value means the server did not respond."
+  },
+  "StatTip13": {
+    "message": "Duration of unplayed video in the buffer. See buffer overflows, buffer underruns, and the buffer size setting.\n\nMinimum < average < maximum. The table shows recent values, with the newest highlighted in red."
+  },
+  "StatTip14": {
+    "message": "Time to convert the second-to-last segment from TS to MP4. It can rise when the CPU is busy."
+  },
+  "StatTip15": {
+    "message": "Estimated time from video capture at the source to playback here. The actual delay can be several seconds longer."
+  },
+  "StatTip16": {
+    "message": "Time since this page opened."
+  },
+  "StatTip17": {
+    "message": "Approximate amount of data downloaded since this page opened."
+  },
+  "StatTip18": {
+    "message": "Frames the browser could not display / total frames. Switching tabs or resizing the window may increase the dropped frame count. Other possible causes include slow decoding, variable frame rate, a display refresh rate that differs from the video frame rate, and low buffer levels."
+  },
+  "StatTip19": {
+    "message": "Segments with possible dropped video frames + segments with missing audio + corrupt segments / downloaded segments. Missing video or audio can cause freezes, artifacts, loss of sound, or playback pauses. The source or media server can send incomplete or damaged segments."
+  },
+  "StatTip20": {
+    "message": "Download errors + decisions to skip downloads (segments missed as a result). Causes include slow downloads, a network interruption, or server trouble. The player may also skip a download because of stream behavior or slow browser scheduling. Increasing the buffer size can help reduce skips."
+  },
+  "StatTip21": {
+    "message": "Number of buffer overflows (seconds of video removed). The buffer size and overflow settings affect this count. Overflows can also follow repeated settings changes, a poor connection, missing audio, or a playback error."
+  },
+  "StatTip22": {
+    "message": "Times playback paused because the buffer ran out. A smaller buffer can run out more often. An hourglass appears while the player refills the buffer."
   }
 }

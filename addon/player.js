@@ -331,24 +331,21 @@ const м_Отладка = (() => {
             сПричинаЗавершенияРаботы === 'ОТПРАВИТЬ ОТЗЫВ' ? 'feedback' : 'error'
         );
         ПоказатьСтраницу().then(doc => {
-            const ru = Текст('M0010') === 'ru';
             doc.body.textContent = '';
             const title = doc.createElement('h2');
-            title.textContent = ru ? 'Локальный отчёт Weave' : 'Weave local report';
+            title.textContent = Текст('WeaveReportTitle');
             const notice = doc.createElement('p');
-            notice.textContent = ru
-                ? 'Ничего не отправляется. Этот минимальный отчёт содержит только версию расширения, версию Firefox и тип обращения. Сохрани его и опиши проблему отдельно.'
-                : 'Nothing is sent. This minimal report contains only the extension version, Firefox version and report type. Save it and describe the issue separately.';
+            notice.textContent = Текст('WeaveReportNotice');
             const preview = doc.createElement('pre');
             preview.textContent = JSON.stringify(safeReport, null, 2);
             const download = doc.createElement('a');
-            download.textContent = ru ? 'Скачать отчёт' : 'Download report';
+            download.textContent = Текст('WeaveReportDownload');
             download.download = 'weave-diagnostic.json';
             const url = URL.createObjectURL(new Blob([preview.textContent], {type: 'application/json'}));
             download.href = url;
             window.addEventListener('pagehide', () => URL.revokeObjectURL(url), {once: true});
             const reload = doc.createElement('button');
-            reload.textContent = ru ? 'Перезапустить плеер' : 'Reload player';
+            reload.textContent = Текст('WeaveReportReload');
             reload.addEventListener('click', () => window.location.reload());
             doc.body.append(title, notice, preview, download, doc.createElement('hr'), reload);
         });
@@ -2666,6 +2663,7 @@ const м_Управление = (() => {
 		Узел('адресчата').selectedIndex = м_Настройки.Получить('лПолноценныйЧат') ? 0 : м_Настройки.Получить('лЗатемнитьЧат') ? 2 : 1;
 		Узел('масштабироватьизображение').checked = м_Настройки.Получить('лМасштабироватьИзображение');
 		Узел('анимацияинтерфейса').checked = м_Настройки.Получить('лАнимацияИнтерфейса');
+		Узел('автобонусы').checked = м_Настройки.Получить('autoClaimChannelPoints');
 		Узел('менятьгромкостьколесом').value = м_Настройки.Получить('лМенятьГромкостьКолесом') ? м_Настройки.Получить('чШагИзмененияГромкостиКолесом') : '';
 		const лАвтоПоложение = м_Настройки.Получить('лАвтоПоложениеЧата');
 		Узел('автоположениечата').checked = лАвтоПоложение;
@@ -2853,6 +2851,9 @@ const м_Управление = (() => {
 		Узел('варианттрансляции').addEventListener('change', ОбработатьИзменениеВариантаТрансляции);
 		Узел('менятьгромкостьколесом').addEventListener('change', ОбработатьИзменениеГромкостиКолесом);
 		Узел('адресчата').addEventListener('change', ОбработатьИзменениеАдресаЧата);
+		Узел('автобонусы').addEventListener('change', оСобытие => {
+			м_Настройки.Изменить('autoClaimChannelPoints', оСобытие.currentTarget.checked);
+		});
 		Узел('выборфайладляимпортанастроек').addEventListener('change', ОбработатьВыборФайлаДляИмпортаНастроек);
 		запуститьИзменениеГромкостиКолесом();
 		ИзменитьСостояние(СОСТОЯНИЕ_ЗАПУСК);
@@ -3100,7 +3101,7 @@ const м_Чат = {
 		}
 		const frame = document.createElement('iframe');
 		frame.id = 'чат';
-		frame.title = 'Twitch Chat';
+		frame.title = Текст('TwitchChatFrame');
 		frame.src = url;
 		frame.className = 'weave-embedded-chat';
 		Узел('проигрывательичат').appendChild(frame);
