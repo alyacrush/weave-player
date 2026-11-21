@@ -337,6 +337,7 @@ const м_i18n = (() => {
 		return elInsertTo;
 	}
 	function TranslateDocument(оДокумент) {
+		оДокумент.documentElement.lang = GetMessage('M0010');
 		м_Журнал.Вот('[i18n] Перевод документа');
 		for (let elTranslate, celTranslate = оДокумент.querySelectorAll('*[data-i18n]'), i = 0; elTranslate = celTranslate[i]; ++i) {
 			const sNames = elTranslate.getAttribute('data-i18n');

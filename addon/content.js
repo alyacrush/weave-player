@@ -181,11 +181,11 @@ function openEmbeddedPlayer(channel) {
 	panel.style.cssText = 'position:absolute;inset:0;z-index:100;background:#000;display:grid;grid-template-rows:auto minmax(0,1fr);overflow:hidden';
 	const restore = document.createElement('button');
 	restore.type = 'button';
-	restore.textContent = 'Вернуть плеер Twitch / Restore Twitch player';
+	restore.textContent = м_i18n.GetMessage('RestoreTwitchPlayer');
 	restore.style.cssText = 'color:white;background:#232328;padding:4px;cursor:pointer';
 	const frame = document.createElement('iframe');
 	frame.src = chrome.runtime.getURL('player.html') + '?embedded=1&channel=' + encodeURIComponent(channel);
-	frame.title = 'Weave Player';
+	frame.title = м_i18n.GetMessage('WeavePlayerFrame');
 	frame.allow = 'autoplay; fullscreen';
 	frame.style.cssText = 'display:block;min-width:0;min-height:0;width:100%;height:100%;border:0';
 	panel.append(restore, frame);

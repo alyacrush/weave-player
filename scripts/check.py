@@ -1,8 +1,23 @@
 from pathlib import Path
-import json, subprocess, hashlib, sys, zipfile
+import json, subprocess, hashlib, re, sys, zipfile
 ROOT=Path(__file__).resolve().parents[1]
 def run(*args): subprocess.run(args,cwd=ROOT,check=True)
 for p in (ROOT/'addon').rglob('*.json'): json.loads(p.read_text())
+
+locale_path = ROOT / 'addon' / '_locales'
+en, ru = (json.loads((locale_path / lang / 'messages.json').read_text()) for lang in ('en', 'ru'))
+assert en.keys() == ru.keys(), f'English only: {en.keys() - ru.keys()}; Russian only: {ru.keys() - en.keys()}'
+placeholder = re.compile(r'(?<!\$)\$(?:\d+|[A-Za-z_][A-Za-z0-9_]*\$)')
+for key in en:
+    assert en[key]['message'].strip() and ru[key]['message'].strip(), key
+    assert set(placeholder.findall(en[key]['message'])) == set(placeholder.findall(ru[key]['message'])), key
+    assert en[key].get('placeholders', {}).keys() == ru[key].get('placeholders', {}).keys(), key
+for page in ('player.html', 'about.html', 'report.html'):
+    markup = (ROOT / 'addon' / page).read_text()
+    for value in re.findall(r'\bdata-i18n=["\']?([A-Za-z0-9_^]+)', markup):
+        assert all(key in en for key in value.split('^') if key), (page, value)
+print(f'PASS: {len(en)} English and Russian messages, placeholders, and page references')
+
 for p in (ROOT/'addon').glob('*.js'): run('node','--check',str(p))
 for test in ['test.cjs','worker.cjs','diagnostics.cjs','autoclaim.cjs']: run('node','tests/'+test)
 player=(ROOT/'addon/player.js').read_text()
