@@ -11,13 +11,6 @@ function Проверить(пУсловие) {
 	}
 }
 
-function получитьВерсиюБраузера() {
-	if (!получитьВерсиюБраузера.hasOwnProperty('_чРезультат')) {
-		получитьВерсиюБраузера._чРезультат = Number.parseInt(/Firefox\/(\d+)/.exec(navigator.userAgent)[1], 10);
-	}
-	return получитьВерсиюБраузера._чРезультат;
-}
-
 function этоМобильноеУстройство() {
 	if (!этоМобильноеУстройство.hasOwnProperty('_лРезультат')) {
 		этоМобильноеУстройство._лРезультат = navigator.userAgentData ? navigator.userAgentData.mobile : navigator.userAgent.includes('Android');
@@ -25,50 +18,7 @@ function этоМобильноеУстройство() {
 	return этоМобильноеУстройство._лРезультат;
 }
 
-if (получитьВерсиюБраузера() >= 78) {
-	var СоздатьDataView = мбБуфер => new DataView(мбБуфер.buffer);
-} else {
-	СоздатьDataView = (мбБуфер => мбБуфер);
-	Uint8Array.prototype.getUint8 = function(у) {
-		у |= 0;
-		return this[у];
-	};
-	Uint8Array.prototype.getInt16 = function(у) {
-		у |= 0;
-		return this[у] << 24 >> 16 | this[у + 1 | 0];
-	};
-	Uint8Array.prototype.getUint16 = function(у) {
-		у |= 0;
-		return this[у] << 8 | this[у + 1 | 0];
-	};
-	Uint8Array.prototype.getInt32 = function(у) {
-		у |= 0;
-		return this[у] << 24 | this[у + 1 | 0] << 16 | this[у + 2 | 0] << 8 | this[у + 3 | 0];
-	};
-	Uint8Array.prototype.getUint32 = function(у) {
-		у |= 0;
-		return (this[у] << 24 | this[у + 1 | 0] << 16 | this[у + 2 | 0] << 8 | this[у + 3 | 0]) >>> 0;
-	};
-	Uint8Array.prototype.setInt8 = Uint8Array.prototype.setUint8 = function(у, чЗначение) {
-		у |= 0;
-		чЗначение |= 0;
-		this[у] = чЗначение;
-	};
-	Uint8Array.prototype.setInt16 = Uint8Array.prototype.setUint16 = function(у, чЗначение) {
-		у |= 0;
-		чЗначение |= 0;
-		this[у] = чЗначение >> 8;
-		this[у + 1 | 0] = чЗначение;
-	};
-	Uint8Array.prototype.setInt32 = Uint8Array.prototype.setUint32 = function(у, чЗначение) {
-		у |= 0;
-		чЗначение |= 0;
-		this[у] = чЗначение >> 24;
-		this[у + 1 | 0] = чЗначение >> 16;
-		this[у + 2 | 0] = чЗначение >> 8;
-		this[у + 3 | 0] = чЗначение;
-	};
-}
+const СоздатьDataView = мбБуфер => new DataView(мбБуфер.buffer);
 
 Uint8Array.prototype.getUint64 = function(у) {
 	у |= 0;

@@ -4,6 +4,7 @@ on:
     branches:
       - main
       - 'release/**'
+      - feature/chrome-mv3
   pull_request:
   workflow_dispatch:
 
@@ -31,6 +32,20 @@ jobs:
           "$PLAYWRIGHT_MODULE/cli.js" install --with-deps firefox
           node tests/player-navigation.cjs
           WEAVE_TEST_BROWSER=firefox node tests/playback.cjs
+      - name: Test the Manifest V3 package in Chromium
+        run: |
+          export PLAYWRIGHT_MODULE="$RUNNER_TEMP/weave-browser-tests/node_modules/playwright"
+          "$PLAYWRIGHT_MODULE/cli.js" install --with-deps chromium
+          export CHROMIUM_PATH="$(node -p 'require(process.env.PLAYWRIGHT_MODULE).chromium.executablePath()')"
+          WEAVE_TEST_BROWSER=chromium node tests/player-navigation.cjs
+          node tests/playback.cjs
+          node tests/chrome-extension.cjs
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: github.event_name != 'pull_request'
+        with:
+          name: weave-chrome-unsigned
+          path: dist/weave-chrome-*.zip
+          retention-days: 14
       - name: Pack source for review
         if: github.event_name != 'pull_request'
         run: |
@@ -40,5 +55,7 @@ jobs:
         if: github.event_name != 'pull_request'
         with:
           name: weave-firefox-unsigned-and-source
-          path: dist/*
+          path: |
+            dist/weave-firefox-*.xpi*
+            dist/weave-firefox-*-source.zip
           retention-days: 14

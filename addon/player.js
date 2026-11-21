@@ -2,7 +2,9 @@
 
 const embeddedPrototype = window.top !== window;
 if (embeddedPrototype) document.documentElement.classList.add('weave-embedded-player');
-const ВЕРСИЯ_РАСШИРЕНИЯ = embeddedPrototype ? '2026.11.19.5' : chrome.runtime.getManifest().version;
+const extensionManifest = chrome.runtime.getManifest();
+const isChromeBuild = extensionManifest.manifest_version === 3;
+const ВЕРСИЯ_РАСШИРЕНИЯ = extensionManifest.version;
 
 const ЗАГРУЖАТЬ_СПИСОК_ВАРИАНТОВ_НЕ_ДОЛЬШЕ = 3e4;
 
@@ -119,7 +121,7 @@ function проверитьРазрешенияРасширения() {
 	}
 	return new Promise(фВыполнить => {
 		chrome.permissions.contains({
-			origins: chrome.runtime.getManifest().permissions.filter(сРазрешение => сРазрешение.includes(':'))
+			origins: extensionManifest.host_permissions || extensionManifest.permissions.filter(сРазрешение => сРазрешение.includes(':'))
 		}, лРазрешено => {
 			if (chrome.runtime.lastError) {
 				console.error('permissions.contains', chrome.runtime.lastError.message);
@@ -3090,7 +3092,7 @@ const м_Управление = (() => {
 const м_Чат = {
 	ПереключитьСостояниеПанели() {
 		const url = м_Twitch.открытьЧат();
-		if (embeddedPrototype) {
+		if (embeddedPrototype || isChromeBuild) {
 			window.open(url, '_blank', 'noopener,noreferrer');
 			return;
 		}
@@ -5470,7 +5472,7 @@ function ЗавершитьРаботу(лБыстро) {
 	if (embeddedPrototype && new URLSearchParams(location.search).get('embedded') !== '1') {
 		return;
 	}
-	if (!navigator.userAgent.includes('Firefox/')) {
+	if (!isChromeBuild && !navigator.userAgent.includes('Firefox/')) {
 		м_Отладка.ЗавершитьРаботуИПоказатьСообщение('J0204');
 	}
 	const сКанал = (new URLSearchParams(location.search.slice(1)).get('channel') || 'channel').toLowerCase();
