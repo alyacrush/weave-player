@@ -33,3 +33,10 @@ html.weave-embedded-player body {
 	min-height: 0;
 	background: #18181b;
 }
+
+#автобонусы {
+	appearance: auto;
+	width: 1.125rem;
+	height: 1.125rem;
+	vertical-align: middle;
+}

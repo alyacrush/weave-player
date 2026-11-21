@@ -518,7 +518,7 @@
     "message": "Help.\nThe F1 key on the keyboard."
   },
   "J0600": {
-    "message": "Choose a mode to apply it on the current channel. Click W to launch the selected player."
+    "message": "Right-click W to switch modes. On a live channel, left-click W to open Weave in the selected mode. When Weave is off, left-click has no effect."
   },
   "J0601": {
     "message": "Mode: Off"
@@ -531,6 +531,15 @@
   },
   "J0604": {
     "message": "Weave player mode"
+  },
+  "F0681": {
+    "message": "Extra features"
+  },
+  "F0682": {
+    "message": "Automatically claim bonus Channel Points"
+  },
+  "A0682": {
+    "message": "Weave clicks the bonus button when it appears in a Twitch tab. Off by default."
   },
   "F0604": {
     "message": "All Settings"

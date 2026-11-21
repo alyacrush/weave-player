@@ -4,13 +4,12 @@ ROOT=Path(__file__).resolve().parents[1]
 def run(*args): subprocess.run(args,cwd=ROOT,check=True)
 for p in (ROOT/'addon').rglob('*.json'): json.loads(p.read_text())
 for p in (ROOT/'addon').glob('*.js'): run('node','--check',str(p))
-for test in ['test.cjs','worker.cjs','diagnostics.cjs']: run('node','tests/'+test)
+for test in ['test.cjs','worker.cjs','diagnostics.cjs','autoclaim.cjs']: run('node','tests/'+test)
 player=(ROOT/'addon/player.js').read_text()
 assert 'report3.php' not in player
 assert 'tw5/version.json' not in player
 for obsolete in ('recordAdEvent', 'chrome.system.', 'WEBGL_debug_renderer_info'):
     assert obsolete not in player, obsolete
-assert not (ROOT/'addon/autoclaim.js').exists()
 assert 'WeaveDiagnostics.createReport' in player
 assert 'src=diagnostics.js' in (ROOT/'addon/player.html').read_text()
 manifest=json.loads((ROOT/'addon/manifest.json').read_text())
