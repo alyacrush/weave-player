@@ -19,7 +19,7 @@ jobs:
           "$PLAYWRIGHT_MODULE/cli.js" install --with-deps chromium
           mkdir visual
           node tests/chrome-visual.cjs
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f3752f3646cd9
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: player-visuals
