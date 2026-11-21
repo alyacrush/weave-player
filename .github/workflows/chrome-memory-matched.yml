@@ -1,7 +1,7 @@
 name: Matched playback memory in Chrome
 on:
   push:
-    branches: [experiment/chrome-memory-matched]
+    branches: [experiment/chrome-memory-native]
 permissions:
   contents: read
 jobs:
@@ -14,10 +14,6 @@ jobs:
       matrix:
         include:
           - {mode: native, replay: 0}
-          - {mode: embedded, replay: 60}
-          - {mode: embedded, replay: 30}
-          - {mode: standalone, replay: 60}
-          - {mode: standalone, replay: 30}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:

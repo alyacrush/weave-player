@@ -74,13 +74,13 @@ const channel = process.env.WEAVE_CHANNEL;
 const quality = '720p60';
 
 async function setTwitchQuality(page) {
-	const settings = page.locator('[data-a-target="player-settings-button"]');
+	const settings = page.locator('[data-a-target="video-player"] [data-a-target="player-settings-button"]:visible').first();
 	await page.locator('[data-a-target="video-player"]').hover();
 	await settings.click({timeout:10000});
-	const menu = page.locator('[data-a-target="player-settings-menu-item-quality"]');
+	const menu = page.locator('[data-a-target="player-settings-menu-item-quality"]:visible').first();
 	if (await menu.count() === 1) await menu.click();
 	else await page.getByText('Quality', {exact:true}).click({timeout:10000});
-	await page.getByText(/^720p60(?:\s*\(.*\))?$/i).click({timeout:10000});
+	await page.getByText(/^720p60(?:\s*\(.*\))?$/i).filter({visible:true}).first().click({timeout:10000});
 }
 
 function median(values) {
