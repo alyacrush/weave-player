@@ -177,6 +177,27 @@ async function main() {
 		await page.getByRole('button', {name: /restore twitch player/i}).click();
 		await page.locator('[data-weave-diagnostic]').waitFor({state: 'detached'});
 		console.log('PASS: Twitch page reports playback, a safe error code, and a blocked frame; page messages cannot spoof progress');
+
+		await page.goto(channelPage + '?weave=0');
+		await page.locator('[data-weave-mode="1"]').click();
+		await page.locator('[data-weave-diagnostic="playing"]').waitFor({timeout: 15000});
+		const stoppedPlayer = page.frames().find(frame => frame.url().startsWith(extensionOrigin + '/player.html'));
+		const released = await stoppedPlayer.evaluate(() => {
+			const bytes = new ArrayBuffer(8 * 1024 * 1024);
+			г_моОчередь.Добавить(new Сегмент(ОБРАБОТКА_ЗАГРУЖЕН, bytes, 2, false));
+			const before = {bytes: bytes.byteLength, queued: г_моОчередь.length};
+			try {
+				м_Отладка.ЗавершитьРаботуИПоказатьСообщение('J0208');
+			} catch (error) {
+				if (error !== undefined) throw error;
+			}
+			return {before, after: {bytes: bytes.byteLength, queued: г_моОчередь.length}};
+		});
+		assert.equal(released.before.bytes, 8 * 1024 * 1024);
+		assert.ok(released.before.queued > 0);
+		assert.deepEqual(released.after, {bytes: 0, queued: 0});
+		await page.locator('[data-weave-diagnostic="error"]').waitFor({timeout: 5000});
+		console.log('PASS: fatal playback error releases queued media bytes');
 		console.log('PASS: Chromium MV3 loads, plays fixture video in both modes, restores Twitch, opens official chat, and replays buffered video');
 	} finally {
 		await context?.close();
