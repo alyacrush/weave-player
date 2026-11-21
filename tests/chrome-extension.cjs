@@ -9,6 +9,8 @@ const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 
 const fixture = name => fs.readFileSync(path.join(__dirname, 'fixtures', name));
 const channelPage = 'https://www.twitch.tv/testchannel';
+const blockedFramePage = 'https://www.twitch.tv/testblocked?weave=0';
+const invalidMediaPage = 'https://www.twitch.tv/testinvalidmedia?weave=0';
 const mediaHost = 'https://test.ttvnw.net';
 const chatPage = 'https://www.twitch.tv/popout/testchannel/chat';
 const showNativePlayer = `
@@ -41,14 +43,24 @@ async function serveFixture(route) {
 			: {user};
 		await route.fulfill({headers, json: {data}});
 	} else if (url.hostname === 'usher.ttvnw.net') {
-		await route.fulfill({headers, body: master});
+		const body = url.pathname.endsWith('/testinvalidmedia.m3u8')
+			? master.replace('/live.m3u8', '/encrypted.m3u8')
+			: master;
+		await route.fulfill({headers, body});
 	} else if (url.origin === mediaHost) {
 		const name = url.pathname.slice(1);
-		const body = name === 'live.m3u8'
-			? fixture(name).toString().replace(/#EXT-X-ENDLIST\n?/, '').replaceAll('#EXTINF:2.000000,', '#EXTINF:2.000000,live')
-			: fixture(name);
+		const playlist = () => fixture('live.m3u8').toString().replace(/#EXT-X-ENDLIST\n?/, '').replaceAll('#EXTINF:2.000000,', '#EXTINF:2.000000,live');
+		const body = name === 'encrypted.m3u8'
+			? playlist().replace('#EXT-X-MAP', '#EXT-X-KEY:METHOD=SAMPLE-AES,URI="mock"\n#EXT-X-MAP')
+			: name === 'live.m3u8' ? playlist() : fixture(name);
 		await route.fulfill({headers, body});
-	} else if (url.href === channelPage || url.href.startsWith(channelPage + '?')) {
+	} else if (url.href === blockedFramePage) {
+		await route.fulfill({
+			contentType: 'text/html',
+			headers: {'content-security-policy': "frame-src 'none'"},
+			body: showNativePlayer,
+		});
+	} else if (url.href === invalidMediaPage || url.href === channelPage || url.href.startsWith(channelPage + '?')) {
 		await route.fulfill({contentType: 'text/html', body: showNativePlayer});
 	} else if (url.href.startsWith(chatPage + '?')) {
 		await route.fulfill({contentType: 'text/html', body: '<title>Twitch chat</title><p>Chat fixture</p>'});
@@ -114,6 +126,7 @@ async function main() {
 		assert.ok(embedded, 'the extension frame loads in the channel page');
 		assert.equal(page.url(), channelPage);
 		await waitForVideo(embedded);
+		await page.locator('[data-weave-diagnostic="playing"]').waitFor({timeout: 5000});
 		await page.getByText('Native Twitch chat').waitFor();
 		await page.getByRole('button', {name: /restore twitch player/i}).click();
 		await page.locator('iframe[src*="player.html?embedded=1"]').waitFor({state: 'detached'});
@@ -136,6 +149,21 @@ async function main() {
 		await page.waitForFunction(() => !document.querySelector('video').paused);
 
 		assert.deepEqual(errors, []);
+
+		await page.goto(invalidMediaPage);
+		await page.locator('[data-weave-mode="1"]').click();
+		const errorStatus = page.locator('[data-weave-diagnostic="error"]');
+		await errorStatus.waitFor({timeout: 12000});
+		assert.match(await errorStatus.innerText(), /J0219/);
+
+		await page.goto(blockedFramePage);
+		await page.locator('[data-weave-mode="1"]').click();
+		await page.locator('[data-weave-diagnostic="frame"]').waitFor({timeout: 5000});
+		await page.evaluate(() => window.postMessage({type: 'weave-embedded-status', phase: 'playing'}, location.origin));
+		await page.locator('[data-weave-diagnostic="frame-timeout"]').waitFor({timeout: 14000});
+		await page.getByRole('button', {name: /restore twitch player/i}).click();
+		await page.locator('[data-weave-diagnostic]').waitFor({state: 'detached'});
+		console.log('PASS: Twitch page reports playback, a safe error code, and a blocked frame; page messages cannot spoof progress');
 		console.log('PASS: Chromium MV3 loads, plays fixture video in both modes, restores Twitch, opens official chat, and replays buffered video');
 	} finally {
 		await context?.close();

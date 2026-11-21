@@ -6,6 +6,20 @@ const extensionManifest = chrome.runtime.getManifest();
 const isChromeBuild = extensionManifest.manifest_version === 3;
 const ВЕРСИЯ_РАСШИРЕНИЯ = extensionManifest.version;
 
+const embeddedHost = isChromeBuild && embeddedPrototype &&
+	new URLSearchParams(location.search).get('embedded') === '1'
+	? location.ancestorOrigins?.[0]
+	: null;
+
+function showEmbeddedStatus(phase, code) {
+	if (embeddedHost === 'https://www.twitch.tv') {
+		// Only fixed phase names and optional internal error codes cross the frame boundary.
+		window.parent.postMessage({type: 'weave-embedded-status', phase, code}, embeddedHost);
+	}
+}
+
+showEmbeddedStatus('starting');
+
 const ЗАГРУЖАТЬ_СПИСОК_ВАРИАНТОВ_НЕ_ДОЛЬШЕ = 3e4;
 
 const ЗАГРУЖАТЬ_СПИСОК_СЕГМЕНТОВ_НЕ_ДОЛЬШЕ = 6e3;
@@ -355,6 +369,7 @@ const м_Отладка = (() => {
 	function ЗавершитьРаботуИПоказатьСообщение(сКодСообщения, сКодСсылки, сАдресСсылки) {
 		if (!г_лРаботаЗавершена) {
 			console.error(сКодСообщения);
+			showEmbeddedStatus('error', сКодСообщения);
 			ЗавершитьРаботу(false);
 			ПоказатьСообщение(Текст(сКодСообщения), сКодСсылки, сАдресСсылки);
 		}
@@ -367,6 +382,7 @@ const м_Отладка = (() => {
 			if (сПричинаЗавершенияРаботы.includes('out of memory')) {
 				ЗавершитьРаботуИПоказатьСообщение('J0200');
 			}
+			showEmbeddedStatus('error');
 			try {
 				м_Проигрыватель.ПоказатьСостояние('Вот', 'Завершаю работу');
 				г_моОчередь.ПоказатьСостояние();
@@ -2875,6 +2891,7 @@ const м_Управление = (() => {
 		м_События.ПослатьСобытие('управление-изменилосьсостояние', чНовоеСостояние);
 		switch (чНовоеСостояние) {
 		  case СОСТОЯНИЕ_ЗАПУСК:
+			showEmbeddedStatus('starting');
 			ПоказатьМетаданныеТрансляции({
 				сТипТрансляции: null,
 				сНазваниеТрансляции: НАЗВАНИЕ_ТРАНСЛЯЦИИ_НЕИЗВЕСТНО,
@@ -2887,6 +2904,7 @@ const м_Управление = (() => {
 			break;
 
 		  case СОСТОЯНИЕ_НАЧАЛО_ТРАНСЛЯЦИИ:
+			showEmbeddedStatus('buffering');
 			ПоказатьМетаданныеТрансляции({
 				сТипТрансляции: null,
 				сНазваниеТрансляции: НАЗВАНИЕ_ТРАНСЛЯЦИИ_НЕИЗВЕСТНО,
@@ -2899,6 +2917,7 @@ const м_Управление = (() => {
 			break;
 
 		  case СОСТОЯНИЕ_ЗАВЕРШЕНИЕ_ТРАНСЛЯЦИИ:
+			showEmbeddedStatus('unavailable');
 			ПоказатьМетаданныеТрансляции({
 				сТипТрансляции: 'завершена',
 				кЗрителей: null,
@@ -2910,11 +2929,16 @@ const м_Управление = (() => {
 
 		  case СОСТОЯНИЕ_ЗАГРУЗКА:
 		  case СОСТОЯНИЕ_НАЧАЛО_ВОСПРОИЗВЕДЕНИЯ:
+			showEmbeddedStatus('buffering');
+			break;
+
 		  case СОСТОЯНИЕ_ВОСПРОИЗВЕДЕНИЕ:
+			showEmbeddedStatus('playing');
 			break;
 
 		  case СОСТОЯНИЕ_ОСТАНОВКА:
 		  case СОСТОЯНИЕ_ПОВТОР:
+			showEmbeddedStatus(чНовоеСостояние === СОСТОЯНИЕ_ПОВТОР ? 'replay' : 'stopped');
 			ПоказатьМетаданныеТрансляции({
 				кЗрителей: null
 			});
@@ -4059,6 +4083,7 @@ const м_Список = (() => {
 			if (сПричина === 'ОТКАЗАНО_В_ДОСТУПЕ') {
 				м_Управление.ОстановитьПросмотрТрансляции();
 				м_Уведомление.ПоказатьЖопу();
+				showEmbeddedStatus('denied');
 			} else {
 				м_Журнал[сПричина === 'КОНЕЦ_СПИСКА' ? 'Окак' : 'Ой'](`[Список] Трансляция завершена. ${сПричина}`);
 				ЗавершитьТрансляцию();

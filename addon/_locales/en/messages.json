@@ -1107,6 +1107,39 @@
   "RestoreTwitchPlayer": {
     "message": "Restore Twitch player"
   },
+  "WeaveEmbedFrame": {
+    "message": "Weave is opening the player frame."
+  },
+  "WeaveEmbedFrameTimeout": {
+    "message": "The Weave frame did not start. Restore the Twitch player or reopen Weave."
+  },
+  "WeaveEmbedStarting": {
+    "message": "The Weave frame loaded. Connecting to Twitch."
+  },
+  "WeaveEmbedBuffering": {
+    "message": "Weave is buffering video."
+  },
+  "WeaveEmbedPlaybackTimeout": {
+    "message": "The Weave frame loaded, but playback has not started."
+  },
+  "WeaveEmbedPlaying": {
+    "message": "Weave is playing the live stream."
+  },
+  "WeaveEmbedReplay": {
+    "message": "Weave is in replay mode."
+  },
+  "WeaveEmbedStopped": {
+    "message": "Weave playback is stopped."
+  },
+  "WeaveEmbedUnavailable": {
+    "message": "Weave has no playable stream data."
+  },
+  "WeaveEmbedDenied": {
+    "message": "Twitch denied the playback request."
+  },
+  "WeaveEmbedError": {
+    "message": "Weave encountered a playback error."
+  },
   "WeavePlayerFrame": {
     "message": "Weave player"
   },

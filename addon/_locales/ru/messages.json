@@ -1120,6 +1120,39 @@
   "RestoreTwitchPlayer": {
     "message": "Вернуть плеер Twitch"
   },
+  "WeaveEmbedFrame": {
+    "message": "Weave открывает окно плеера."
+  },
+  "WeaveEmbedFrameTimeout": {
+    "message": "Окно Weave не запустилось. Верните плеер Twitch или снова откройте Weave."
+  },
+  "WeaveEmbedStarting": {
+    "message": "Окно Weave загрузилось. Подключаемся к Twitch."
+  },
+  "WeaveEmbedBuffering": {
+    "message": "Weave заполняет буфер видео."
+  },
+  "WeaveEmbedPlaybackTimeout": {
+    "message": "Окно Weave загрузилось, но воспроизведение ещё не началось."
+  },
+  "WeaveEmbedPlaying": {
+    "message": "Weave воспроизводит прямой эфир."
+  },
+  "WeaveEmbedReplay": {
+    "message": "Weave в режиме повтора."
+  },
+  "WeaveEmbedStopped": {
+    "message": "Воспроизведение в Weave остановлено."
+  },
+  "WeaveEmbedUnavailable": {
+    "message": "Weave не получил данные для воспроизведения."
+  },
+  "WeaveEmbedDenied": {
+    "message": "Twitch отклонил запрос на воспроизведение."
+  },
+  "WeaveEmbedError": {
+    "message": "В Weave возникла ошибка воспроизведения."
+  },
   "WeavePlayerFrame": {
     "message": "Плеер Weave"
   },

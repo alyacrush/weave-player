@@ -168,6 +168,59 @@ function launchPlayer(address, automatic = false) {
 	}
 }
 
+const embeddedStatusMessages = {
+	frame: 'WeaveEmbedFrame',
+	starting: 'WeaveEmbedStarting',
+	buffering: 'WeaveEmbedBuffering',
+	playing: 'WeaveEmbedPlaying',
+	replay: 'WeaveEmbedReplay',
+	stopped: 'WeaveEmbedStopped',
+	unavailable: 'WeaveEmbedUnavailable',
+	denied: 'WeaveEmbedDenied',
+	error: 'WeaveEmbedError'
+};
+
+function monitorEmbeddedPlayer(frame, row) {
+	const status = document.createElement('span');
+	status.setAttribute('role', 'status');
+	status.style.cssText = 'color:#fff;background:#232328;padding:4px;flex:1;overflow-wrap:anywhere';
+	row.append(status);
+	const frameUrl = new URL(frame.src);
+	const extensionOrigin = frameUrl.protocol + '//' + frameUrl.host;
+	let lastPhase;
+	let timer;
+	function show(phase, message, code) {
+		status.dataset.weaveDiagnostic = phase;
+		status.textContent = м_i18n.GetMessage(message) + (code ? ' (' + code + ')' : '');
+	}
+	function update(phase, code) {
+		if (phase === lastPhase && !code) return;
+		lastPhase = phase;
+		clearTimeout(timer);
+		show(phase, embeddedStatusMessages[phase], code);
+		if (phase === 'frame') {
+			timer = setTimeout(() => show('frame-timeout', 'WeaveEmbedFrameTimeout'), 10000);
+		} else if (phase === 'starting' || phase === 'buffering') {
+			timer = setTimeout(() => show('playback-timeout', 'WeaveEmbedPlaybackTimeout'), 30000);
+		}
+	}
+	function receive(event) {
+		if (event.origin !== extensionOrigin || event.source !== frame.contentWindow ||
+			event.data?.type !== 'weave-embedded-status') return;
+		const {phase, code} = event.data;
+		if (typeof phase !== 'string' || phase === 'frame' || !Object.hasOwn(embeddedStatusMessages, phase)) return;
+		const safeCode = phase === 'error' && typeof code === 'string' &&
+			/^(?:J02[0-9]{2}|J_FMP4_UNSUPPORTED)$/.test(code) ? code : '';
+		update(phase, safeCode);
+	}
+	update('frame');
+	window.addEventListener('message', receive);
+	return () => {
+		clearTimeout(timer);
+		window.removeEventListener('message', receive);
+	};
+}
+
 let closeEmbeddedPlayer = null;
 function openEmbeddedPlayer(channel) {
 	if (closeEmbeddedPlayer) return true;
@@ -188,7 +241,13 @@ function openEmbeddedPlayer(channel) {
 	frame.title = м_i18n.GetMessage('WeavePlayerFrame');
 	frame.allow = 'autoplay; fullscreen';
 	frame.style.cssText = 'display:block;min-width:0;min-height:0;width:100%;height:100%;border:0';
-	panel.append(restore, frame);
+	const row = document.createElement('div');
+	row.style.display = 'flex';
+	row.append(restore);
+	panel.append(row, frame);
+	const stopMonitoring = chrome.runtime.getManifest().manifest_version === 3
+		? monitorEmbeddedPlayer(frame, row)
+		: null;
 
 	const originalPosition = surface.style.position;
 	const wasPlaying = !video.paused;
@@ -233,6 +292,7 @@ function openEmbeddedPlayer(channel) {
 		}
 	});
 	function close() {
+		stopMonitoring?.();
 		observer.disconnect();
 		sizeObserver.disconnect();
 		surface.removeEventListener('play', pauseOriginal, true);
