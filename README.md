@@ -11,6 +11,14 @@ Open a live channel on Twitch. Use the controls next to **W** to choose a mode.
 - **Standalone Weave page** opens the stream on its own page. Use the chat button to show Twitch chat next to the video.
 - **Off** keeps the Twitch player.
 
+## Privacy
+
+Weave keeps settings and diagnostic reports on your device. It has no analytics
+service or automatic report upload.
+
+Weave connects to Twitch and its media servers for playback. Twitch handles
+sign-in and chat. See the [privacy notes](PRIVACY.md) for details.
+
 ## Try the Firefox preview
 
 Mozilla signed the earlier `2026.11.19.5` preview for self-distribution. If you have the
@@ -37,7 +45,7 @@ The build writes an unsigned `.xpi` and its SHA-256 checksum to `dist/`.
 Open an [issue](https://github.com/alyacrush/weave-player/issues) with your Weave
 version, Firefox version, player mode, and the steps to reproduce the problem.
 Keep cookies, playback URLs, and raw logs out of issues. See the
-[privacy notes](PRIVACY.md) and [security reporting guide](SECURITY.md).
+[security reporting guide](SECURITY.md).
 
 ## Credits
 
