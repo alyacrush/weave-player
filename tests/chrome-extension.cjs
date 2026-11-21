@@ -17,6 +17,7 @@ const showNativePlayer = `
 	<aside>Native Twitch chat</aside>
 `;
 const master = `#EXTM3U
+#EXT-X-TWITCH-INFO:SERVER-TIME="${Date.now() / 1000}",BROADCAST-ID="73"
 #EXT-X-MEDIA:TYPE=VIDEO,GROUP-ID="source",NAME="Source",AUTOSELECT=YES,DEFAULT=YES
 #EXT-X-STREAM-INF:BANDWIDTH=600000,RESOLUTION=160x90,CODECS="avc1.42c00d,mp4a.40.2",VIDEO="source"
 ${mediaHost}/live.m3u8
@@ -57,10 +58,21 @@ async function serveFixture(route) {
 }
 
 async function waitForVideo(frame) {
-	await frame.waitForFunction(() => {
-		const video = document.querySelector('video');
-		return video?.videoWidth > 0 && video.played.length && video.played.end(0) - video.played.start(0) > 1.2 && !video.paused;
-	}, null, {timeout: 15_000});
+	try {
+		await frame.waitForFunction(() => {
+			const video = document.querySelector('video');
+			return video?.videoWidth > 0 && video.played.length &&
+				video.played.end(0) - video.played.start(0) > 1.2 && !video.paused;
+		}, null, {timeout: 15_000});
+	} catch (error) {
+		// This test uses only synthetic requests and never opens a live channel.
+		console.error(await frame.evaluate(() => ({
+			state: document.body.getAttribute('data-состояние'),
+			body: document.body.innerText.slice(0, 500),
+			journal: typeof м_Журнал === 'undefined' ? null : м_Журнал.ПолучитьДанныеДляОтчета().slice(-30),
+		})));
+		throw error;
+	}
 }
 
 async function main() {
