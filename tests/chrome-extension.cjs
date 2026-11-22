@@ -83,7 +83,7 @@ async function waitForVideo(frame) {
 
 async function checkPlayerControls(page, frame) {
 	const volume = frame.locator('[id="громкость"]');
-	await frame.locator('video').click({position: {x: 24, y: 24}});
+	await frame.locator('video').click({timeout: 5_000});
 	await volume.fill('75');
 	assert.equal(await frame.locator('video').evaluate(video => video.volume), 0.75);
 	assert.ok(Math.abs(await volume.evaluate(input =>
@@ -97,7 +97,7 @@ async function checkPlayerControls(page, frame) {
 	});
 	assert.equal(inBounds, true, 'the compact controls still fit');
 	await page.setViewportSize({width: 1280, height: 760});
-	await frame.locator('video').click({position: {x: 28, y: 24}});
+	await frame.locator('video').click({timeout: 5_000});
 }
 
 async function main() {
