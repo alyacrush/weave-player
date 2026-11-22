@@ -1,6 +1,6 @@
 # Weave Player for Twitch
 
-Weave is a live Twitch player for desktop Firefox 140 and later. It lets you
+Weave is a live Twitch player for desktop Firefox 140 and later, with a Chrome Manifest V3 build. It lets you
 adjust buffering and replay the part of a stream already in the buffer.
 
 ## Watch a stream
@@ -8,7 +8,7 @@ adjust buffering and replay the part of a stream already in the buffer.
 Open a live channel on Twitch. Use the controls next to **W** to choose a mode.
 
 - **Player on Twitch** replaces the video player and keeps Twitch chat on the channel page.
-- **Standalone Weave page** opens the stream on its own page. Use the chat button to show Twitch chat next to the video.
+- **Standalone Weave page** opens the stream on its own page. In Firefox, the chat button shows Twitch chat next to the video. In Chrome, it opens the official chat in a new tab.
 - **Off** keeps the Twitch player.
 
 ## Privacy
@@ -25,9 +25,15 @@ Mozilla signed the earlier `2026.11.19.5` preview for self-distribution. If you 
 signed `.xpi`, open `about:addons`. Open the gear menu and select
 **Install Add-on From File…**. Select the `.xpi`.
 
-To try the source, open `about:debugging#/runtime/this-firefox`. Select
+For development, open `about:debugging#/runtime/this-firefox`. Select
 **Load Temporary Add-on…**, then select `addon/manifest.json`. Firefox removes
 the temporary installation when it restarts.
+
+## Try the Chrome preview
+
+The Chrome build is being prepared for Chrome Web Store review. A store installation link will be added when the listing is public.
+
+For development, run `python scripts/build_chrome.py`, extract the ZIP from `dist/`, then open `chrome://extensions`. Enable **Developer mode**, select **Load unpacked**, and choose the extracted folder.
 
 ## Build and test
 
@@ -43,7 +49,7 @@ The build writes an unsigned `.xpi` and its SHA-256 checksum to `dist/`.
 ## Report a problem
 
 Open an [issue](https://github.com/alyacrush/weave-player/issues) with your Weave
-version, Firefox version, player mode, and the steps to reproduce the problem.
+version, browser name and version, player mode, and the steps to reproduce the problem.
 Keep cookies, playback URLs, and raw logs out of issues. See the
 [security reporting guide](SECURITY.md).
 
