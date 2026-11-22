@@ -1,67 +1,128 @@
-# Proxy quality experiment
+# Исследование прокси для качества Twitch
 
-The experiment checks whether network routing changes the video quality options
-that Weave receives for a live channel. It uses the existing quality menu and
-requires no change to playback, Twitch credentials, or the extension package.
-TTV LOL PRO documents HTTP proxy support for ad filtering. Its documentation
-does not demonstrate a change in Twitch quality for this experiment.
+Проверено 22 ноября 2026 года. Статус — исследование исходного кода и документации. Прокси-функция в Weave не реализована. Проверка восстановления качества через прокси из ограниченного региона ещё не выполнена.
 
-## Candidate route and privacy boundary
+Этот документ заменяет ранний план эксперимента. В раннем плане не был учтён существующий режим Unlock Best Quality в TTV LOL PRO.
 
-TTV LOL PRO v2 lists `firefox.api.cdn-perfprod.com:2023` as its default
-optimized Firefox proxy in `src/store/getDefaultState.ts`. Its Firefox handler
-can route several categories beyond video and explicitly excludes requests from
-non-Twitch documents. Installing it alongside Weave is therefore insufficient
-to establish that Weave's own playlist requests use that proxy.
+## Цель
 
-The candidate for Weave is an opt-in Firefox per-request rule for only Weave's
-HTTPS live master playlist GET on `usher.ttvnw.net`. Require the exact Weave
-player initiator and expected HLS path. Leave GraphQL, OAuth, Twitch pages, chat,
-other extensions, and media segments on their existing route. Preserve normal
-end-to-end TLS validation and log no request URLs, headers, tokens or cookies.
-The signed playlist URL travels inside TLS to Twitch. Reject plain HTTP.
+Получать максимально качественный вариант трансляции, который одновременно доступен на стороне Twitch и поддерживается плеером, Firefox и устройством. Зафиксировать выбор качества можно только после получения соответствующего варианта потока.
 
-The proxy operator still receives the client IP, destination host and connection
-metadata. TTV LOL PRO's policy says its default service may log IPs for up to
-24 hours. That policy does not establish terms for Weave clients. A published
-hostname establishes a candidate, not authorization, availability, capacity,
-or an effect on quality. Verify operator support before bundling it as a default
-and confirm whether this metadata exposure meets the owner's privacy requirement.
+Нужно проверять отдельно список доступных вариантов, выбранное качество, фактическое разрешение декодируемого видео и устойчивость воспроизведения. Появление пункта 1080p в меню само по себе недостаточно.
 
-Sources:
-- https://github.com/younesaassila/ttv-lol-pro/blob/v2/src/store/getDefaultState.ts
-- https://github.com/younesaassila/ttv-lol-pro/blob/v2/src/background/handlers/onProxyRequest.ts
-- https://github.com/younesaassila/ttv-lol-pro/blob/v2/PRIVACY.md
-- https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/proxy/onRequest
+## Как получается видео
 
-## Run a matched comparison
+1. Плеер запрашивает в GraphQL Twitch токен воспроизведения для канала.
+2. С токеном и подписью получает главный HLS-плейлист через Usher. Этот плейлист содержит доступные варианты качества.
+3. Плеер загружает плейлист выбранного варианта.
+4. Плеер получает видеосегменты с CDN и передаёт их браузеру.
 
-1. Pick a live channel where the expected quality is missing. Use the same
-   Firefox profile, Twitch account, and Weave version throughout.
-2. With the alternate route off, open the stream and screenshot the complete
-   quality menu. Note the time and highest resolution and frame rate offered.
-3. Turn on an existing VPN or trusted proxy route for this Firefox session.
-   Record its exit country if known. Reopen the same stream and capture the
-   same menu while the broadcast is still live.
-4. Restore the initial route and reopen the stream again. Capture the menu a
-   third time. Keep the three observations close together so changes on the
-   broadcaster's side are less likely to affect the comparison.
+Географическая маршрутизация первых двух этапов — подтверждённый направлением разработки TTV LOL PRO кандидат для эксперимента. Она позволяет оставить основной объём видео на обычном соединении. Достаточность одного запроса Usher для Weave пока не установлена.
 
-Share screenshots of the quality menu or just the offered resolutions and
-frame rates. Signed playlist URLs, cookies and proxy credentials are unnecessary.
+Twitch официально описывает географические ограничения 1440p. Доступность 1080p и более высоких вариантов в конкретном регионе нужно измерять на действующей трансляции. Универсальное правило определения региона для внутренних GraphQL/Usher API Twitch публично не документировано в изученных источниках.
 
-## Evaluate
+## Что делает TTV LOL PRO
 
-- A quality that appears during the alternate route and disappears after
-  restoring the initial route is a candidate routing effect. Select it and
-  confirm actual playback. Repeat on another affected stream before treating
-  it as a reliable outcome.
-- A change in the selected quality alone does not establish a change in the
-  options offered. Compare the entire menu.
-- No difference is valid evidence for the tested route and broadcast.
-- A whole-browser test cannot establish which request must be routed. If the
-  comparison succeeds, isolate playlist routing in a separate experiment
-  before deciding the scope of a proxy feature.
+В ветке v2 функция setUserExperienceMode включает для unlockBestQuality следующие настройки.
 
-Status: procedure prepared. Live comparison requires an affected channel
-and an existing approved route.
+| Категория | Через прокси |
+|---|---|
+| Запрос токена воспроизведения GraphQL | Да |
+| Главный плейлист Usher | Да |
+| Плейлист выбранного варианта Video Weaver | Нет |
+| Остальные запросы GraphQL | Нет |
+| GraphQL Integrity | Нет |
+| Страница Twitch | Нет |
+| Passport | Нет |
+
+Режим появился в выпуске 2.5.0. Он также отключает anonymousMode и автоматическое исключение каналов по подписке. Обработчик fetch выделяет запросы токена из смешанных GraphQL-запросов. Firefox-обработчик прокси учитывает пометку выбранных запросов.
+
+Это полезный технический ориентир для Weave. Прямое подключение TTV LOL PRO рядом с Weave не гарантирует результат. В его обработчике есть исключение запросов от документов вне Twitch, а собственный плеер Weave работает на странице расширения.
+
+Источники исходного кода и история выпусков приведены ниже.
+
+## Какие серверы можно использовать
+
+В getDefaultState указан firefox.api.cdn-perfprod.com:2023. Это стандартный HTTP-прокси для Firefox, а не HTTP API, которому нужно отправить полный адрес плейлиста.
+
+На странице состояния PerfProd публичный сервис снабжён указанием «Use only with the Official Extension». Документация публичного пула описывает размещение в Нидерландах с пересылкой в Россию. Эти сведения требуют проверки у оператора перед использованием в отдельном проекте. География входного сервера не доказывает географию выхода, которую увидит Twitch.
+
+Следовательно, найденный адрес не является готовым бесплатным сервером для поставки в Weave. Изученные условия использования относятся к официальному TTV LOL PRO. Доступность страницы состояния также не подтверждает работоспособность конкретного маршрута для нашей цели.
+
+Варианты дальнейшей работы — согласованное использование инфраструктуры оператора, другой провайдер с подходящими условиями или собственный сервер. Для пользовательского прокси можно предусмотреть отдельную настройку. Это потребует от пользователя своего адреса и само по себе не решит задачу готовой бесплатной функции.
+
+Публичный пул не проверялся трафиком Weave. Сообщения оператору не отправлялись.
+
+## Приватность
+
+У стандартного HTTP CONNECT-прокси HTTPS-соединение с Twitch проходит внутри туннеля. При сохранённой проверке сертификата Twitch оператор прокси обычно видит IP пользователя, домен назначения, время соединения и объём трафика. Содержимое HTTPS-запросов, включая токены, защищено TLS между Firefox и Twitch.
+
+HTTP-прокси с CONNECT и HTTPS-прокси отличаются защищённостью внешнего соединения с самим прокси. Для обоих вариантов нужно сохранять проверку сертификата конечного сервера. Веб-сервис, который принимает полный адрес плейлиста и сам скачивает его, получает этот адрес и имеющиеся в нём токены. Это иной уровень доверия.
+
+Политика TTV LOL PRO допускает хранение IP на стандартных прокси до 24 часов. Для другого оператора нужно читать его собственную политику.
+
+В текущем Weave отдельный плеер умеет читать Twitch-сеанс. Запрос токена воспроизведения может включать OAuth и идентификатор устройства. Поэтому сетевой маршрут для видео всё равно требует проверки данных в управляющих запросах.
+
+Предпочтительный первый эксперимент — публичные эфиры с отдельным запросом токена без Twitch OAuth, cookies и постоянного идентификатора профиля. Это предложение требует проверки работоспособности. Подписочные и другие ограниченные эфиры могут потребовать авторизации.
+
+Для будущего интерфейса точное обещание приватности должно описывать передачу сетевых метаданных оператору. Формулировка «прокси не получает никаких данных пользователя» не соответствует устройству соединения.
+
+## Особенность Weave и 1440p
+
+В main запрос Usher явно содержит supported_codecs=h264. В официальном описании Twitch указано использование HEVC для 1440p.
+
+Для начального эксперимента можно проверить возврат доступного 1080p H.264 там, где обычный маршрут выдаёт максимум 720p. Поддержку HEVC и 1440p нужно исследовать отдельно, включая MediaSource, обработку контейнера, кодеки в плейлисте и декодер Firefox на конкретной системе. Простая замена параметра запроса не подтверждает поддержку нового формата.
+
+## Предлагаемая граница маршрутизации
+
+Для экспериментальной Firefox-сборки подходит proxy.onRequest. Он позволяет выбирать маршрут для отдельного запроса и требует разрешение proxy вместе с доступом к перехватываемым адресам.
+
+Кандидат на минимальную область действия — точные запросы собственного плеера Weave к токену воспроизведения и Usher. Нужно различать запрос токена и прочие GraphQL-операции к тому же домену. Все запросы к gql.twitch.tv нельзя считать запросами видео.
+
+В изолированном тесте нужно проверить реальные documentUrl и originUrl для обоих режимов Weave, приватных окон, контейнеров, нескольких каналов и фоновых запросов. Отдельно проверить перенаправления, повторное использование соединений, кэш, обновление токенов и отключение функции.
+
+Страница Twitch, сообщения чата, авторизация, профиль, подписки, изображения, прочие расширения и основной поток сегментов должны сохранять выбранный пользователем обычный маршрут. Следует учитывать уже установленный VPN или прокси.
+
+При недоступности сервера можно предложить возврат к обычному маршруту с понятным статусом. Такой возврат способен снова уменьшить доступное качество. Это нужно показать пользователю и проверить повторным получением токена и плейлиста.
+
+## Эксперимент перед реализацией
+
+Сначала требуется подходящий разрешённый маршрут с известным выходным регионом и канал, где на обычном соединении отсутствует ожидаемое качество.
+
+| Вариант | Токен | Usher | Сегменты |
+|---|---|---|---|
+| A | Обычный маршрут | Обычный маршрут | Обычный маршрут |
+| B | Обычный маршрут | Прокси | Обычный маршрут |
+| C | Прокси | Прокси | Обычный маршрут |
+
+Сравнить A, B, C и повторно A за короткий промежуток на одном эфире. Повторить на втором эфире. Зафиксировать разрешения, частоту кадров, кодек и битрейт из плейлиста, фактическое разрешение видео, время запуска и остановки буферизации.
+
+Проверить обе страницы Weave, смену канала, обновление страницы, повтор видео, обновление токена и отказ сервера. Успех означает воспроизведение ранее отсутствующего варианта через минимальную область маршрутизации.
+
+GitHub Actions подходит для проверки маршрутизации и изоляции запросов с локальным тестовым прокси. Зарубежный runner сам по себе не воспроизводит региональное ограничение пользователя. Для доказательства эффекта нужен исходный маршрут с ограничением.
+
+В отчёты сохранять агрегированные результаты и внутренние коды ошибок. Полные URL плейлистов, OAuth, cookies и сырые заголовки запроса в артефакты не включать.
+
+## Исходный код и лицензия
+
+TTV LOL PRO распространяется с GPLv3, Weave сохраняет BSD 3-Clause от исходного проекта. Для первого прототипа предлагается самостоятельная реализация ограниченной маршрутизации на API Firefox с опорой на изученное поведение. Перед переносом фрагментов чужого кода нужно отдельно оценить условия их распространения.
+
+## Источники
+
+- [TTV LOL PRO, режимы работы](https://github.com/younesaassila/ttv-lol-pro/blob/v2/src/common/ts/setUserExperienceMode.ts)
+- [TTV LOL PRO, Firefox-прокси](https://github.com/younesaassila/ttv-lol-pro/blob/v2/src/background/handlers/onProxyRequest.ts)
+- [TTV LOL PRO, выбор категорий запросов](https://github.com/younesaassila/ttv-lol-pro/blob/v2/src/common/ts/isRequestTypeProxied.ts)
+- [TTV LOL PRO, обработка fetch](https://github.com/younesaassila/ttv-lol-pro/blob/v2/src/page/getFetch.ts)
+- [TTV LOL PRO, серверы по умолчанию](https://github.com/younesaassila/ttv-lol-pro/blob/v2/src/store/getDefaultState.ts)
+- [История выпусков](https://github.com/younesaassila/ttv-lol-pro/releases)
+- [Инфраструктура прокси](https://wiki.cdn-perfprod.com/must-read/proxy-information.md)
+- [Состояние PerfProd](https://status.perfprod.com/)
+- [Приватность TTV LOL PRO](https://github.com/younesaassila/ttv-lol-pro/blob/v2/PRIVACY.md)
+- [Лицензия TTV LOL PRO](https://github.com/younesaassila/ttv-lol-pro/blob/v2/COPYING)
+- [Mozilla proxy.onRequest](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/proxy/onRequest)
+- [Mozilla proxy.RequestDetails](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/proxy/RequestDetails)
+- [Mozilla proxy.ProxyInfo](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/proxy/ProxyInfo)
+- [HTTP CONNECT](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods/CONNECT)
+- [Twitch о 2k и HEVC](https://blog.twitch.tv/en/2026/06/17/introducing-dual-format-and-2k-streaming-on-twitch/)
+- [Справка Twitch о качестве](https://help.twitch.tv/s/article/stream-quality)
+- [Weave main, получение токена и плейлиста](https://github.com/alyacrush/weave-player/blob/main/addon/player.js)
