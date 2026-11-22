@@ -150,6 +150,25 @@ async function main() {
 		await page.locator('iframe[src*="player.html?embedded=1"]').waitFor({state: 'detached'});
 		assert.equal(page.url(), channelPage);
 
+		// Exercise saved mode on a fresh document and a second manual launch.
+		for (let attempt = 0; attempt < 2; attempt++) {
+			await page.goto(channelPage);
+			await page.locator('[data-weave-diagnostic="playing"]').waitFor({timeout: 15000});
+			const reloaded = page.frames().find(frame => frame.url().startsWith(extensionOrigin + '/player.html'));
+			assert.ok(reloaded, 'saved embedded mode starts on a fresh channel document');
+			await waitForVideo(reloaded);
+			await page.getByRole('button', {name: /restore twitch player/i}).click();
+			await page.locator('iframe[src*="player.html?embedded=1"]').waitFor({state: 'detached'});
+			await page.locator('[id="tw5-автоперенаправление"]').click();
+			await page.locator('[data-weave-diagnostic="playing"]').waitFor({timeout: 15000});
+			const restarted = page.frames().find(frame => frame.url().startsWith(extensionOrigin + '/player.html'));
+			await waitForVideo(restarted);
+			assert.equal(await page.locator('iframe[src*="player.html?embedded=1"]').count(), 1);
+			await page.getByRole('button', {name: /restore twitch player/i}).click();
+			await page.locator('iframe[src*="player.html?embedded=1"]').waitFor({state: 'detached'});
+		}
+		console.log('PASS: saved embedded mode and manual restart play actual video through two reload cycles');
+
 		await page.locator('[data-weave-mode="2"]').click();
 		await page.waitForURL(extensionOrigin + '/player.html?channel=testchannel');
 		await waitForVideo(page);
