@@ -3,6 +3,13 @@
 Weave is a live Twitch player for desktop Firefox 140 and later. It lets you
 adjust buffering and replay the part of a stream already in the buffer.
 
+## Legacy Chrome version
+
+Chrome development and Chrome Web Store publication have been discontinued.
+The [legacy Chrome branch](https://github.com/alyacrush/weave-player/tree/legacy/chrome-mv3)
+preserves the source, build scripts and tests for anyone who wants to maintain the port.
+Active development focuses on Firefox.
+
 ## Watch a stream
 
 Open a live channel on Twitch. Use the controls next to **W** to choose a mode.
