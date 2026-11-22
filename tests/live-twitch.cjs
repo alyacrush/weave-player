@@ -62,9 +62,77 @@ async function observe(page, origin, result) {
 	result.outcome = 'no-playback-observed';
 }
 
+async function checkControls(page, origin, channel, report) {
+	const frame = page.frames().find(item => item.url().startsWith(origin + '/player.html?'));
+	assert.ok(frame, 'embedded frame exists');
+	const checks = [
+		['volume', async () => {
+			await frame.locator('video').click();
+			await frame.locator('[id="громкость"]').fill('75');
+			assert.equal(await frame.locator('video').evaluate(video => video.volume), 0.75);
+			const before = await frame.locator('video').evaluate(video => video.muted);
+			await frame.locator('video').click({button: 'middle'});
+			assert.equal(await frame.locator('video').evaluate(video => video.muted), !before);
+			await frame.locator('video').click({button: 'middle'});
+		}],
+		['resize', async () => {
+			for (const width of [900, 420, 1280]) {
+				await page.setViewportSize({width, height: 800});
+				await frame.locator('video').click();
+				assert.ok(await frame.locator('video').evaluate(video => {
+					const bounds = video.getBoundingClientRect();
+					return bounds.width > 0 && bounds.height > 0 && getComputedStyle(video).objectFit === 'contain';
+				}));
+				assert.ok(await frame.locator('[id="переключитьполноэкранный"]').evaluate(button => {
+					const panel = button.closest('.нижняя');
+					return button.getBoundingClientRect().right <= panel.getBoundingClientRect().right + 1;
+				}));
+			}
+		}],
+		['chat-layout', async () => {
+			const toggle = page.locator('[data-a-target="right-column__toggle-collapse-btn"]');
+			await toggle.click({timeout: 5000});
+			await frame.locator('video').waitFor({state: 'visible'});
+			assert.equal(await frame.locator('video').evaluate(video => getComputedStyle(video).objectFit), 'contain');
+			await toggle.click({timeout: 5000});
+		}],
+		['fullscreen', async () => {
+			await frame.locator('video').click();
+			await frame.locator('[id="переключитьполноэкранный"]').click();
+			await frame.waitForFunction(() => !!document.fullscreenElement, null, {timeout: 5000});
+			await frame.locator('[id="переключитьполноэкранный"]').click();
+			await frame.waitForFunction(() => !document.fullscreenElement, null, {timeout: 5000});
+		}],
+		['replay', async () => {
+			await frame.locator('video').click();
+			await frame.locator('[id="переключитьтрансляцию"]').click();
+			await frame.locator('body[data-состояние="8"]').waitFor({timeout: 5000});
+			await frame.locator('[id="шкала"]').click();
+			await frame.locator('[id="переключитьпаузу"]').click();
+			await frame.waitForFunction(() => !document.querySelector('video').paused, null, {timeout: 5000});
+			await frame.locator('[id="переключитьтрансляцию"]').click();
+			await page.locator('[data-weave-diagnostic="playing"]').waitFor({timeout: 15000});
+		}],
+	];
+	for (const [name, action] of checks) {
+		const result = {channel, check: name};
+		report.controls.push(result);
+		try {
+			await action();
+			result.outcome = 'passed';
+		} catch (error) {
+			result.outcome = 'failed';
+			result.error = safeMessage(error.message);
+		} finally {
+			await page.screenshot({path: path.join(output, channel + '-' + name + '.png')}).catch(() => {});
+			console.log('CONTROL ' + JSON.stringify(result));
+		}
+	}
+}
+
 async function main() {
 	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'weave-live-'));
-	const report = {scenarios: [], environment: {node: process.version}};
+	const report = {scenarios: [], controls: [], environment: {node: process.version}};
 	let context;
 	try {
 		const unpacked = path.join(root, 'extension');
@@ -120,9 +188,18 @@ async function main() {
 				console.log(channel + ' / ' + trigger + ': ' + active.outcome);
 				console.log(JSON.stringify({last: active.samples.at(-1), errors: active.errors.slice(0, 8), network: active.network.slice(0, 8)}));
 			}
+			if (active.outcome === 'playing') await checkControls(page, extensionOrigin, channel, report);
+			const nextChannel = channels[(channels.indexOf(channel) + 1) % channels.length];
+			if (nextChannel !== channel) {
+				active = {channel: nextChannel, trigger: 'channel-change', started: Date.now(), samples: [], errors: [], network: []};
+				report.scenarios.push(active);
+				await page.goto('https://www.twitch.tv/' + nextChannel, {waitUntil: 'domcontentloaded', timeout: 45000});
+				await observe(page, extensionOrigin, active);
+				console.log(nextChannel + ' / channel-change: ' + active.outcome);
+			}
 			await page.close();
 		}
-		if (report.scenarios.some(item => item.outcome !== 'playing')) process.exitCode = 1;
+		if (report.scenarios.some(item => item.outcome !== 'playing') || report.controls.some(item => item.outcome !== 'passed')) process.exitCode = 1;
 	} finally {
 		fs.writeFileSync(path.join(output, 'report.json'), JSON.stringify(report, null, 2));
 		await context?.close();
