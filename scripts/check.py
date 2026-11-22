@@ -19,7 +19,7 @@ for page in ('player.html', 'about.html', 'report.html'):
 print(f'PASS: {len(en)} English and Russian messages, placeholders, and page references')
 
 for p in (ROOT/'addon').glob('*.js'): run('node','--check',str(p))
-for test in ['test.cjs','worker.cjs','diagnostics.cjs','autoclaim.cjs']: run('node','tests/'+test)
+for test in ['test.cjs','worker.cjs','diagnostics.cjs','autoclaim.cjs','quality-proxy.cjs']: run('node','tests/'+test)
 player=(ROOT/'addon/player.js').read_text()
 assert 'report3.php' not in player
 assert 'tw5/version.json' not in player

@@ -146,6 +146,7 @@ async function checkPlayerLanguage(document, lang, catalog) {
 	await document.evaluate(() => м_i18n.TranslateDocument(window.document));
 	assert.equal(await document.locator('html').getAttribute('lang'), lang);
 	assert.equal(await document.locator('[data-i18n="F0682^A0682"]').textContent(), catalog.F0682.message);
+	assert.equal(await document.locator('a[href="proxy-settings.html"]').textContent(), catalog.ProxyTitle.message);
 	assert.equal(await document.locator('[data-i18n="^StatTip01"]').getAttribute('title'), catalog.StatTip01.message);
 }
 

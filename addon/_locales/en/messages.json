@@ -1208,5 +1208,38 @@
   },
   "StatTip22": {
     "message": "Times playback paused because the buffer ran out. A smaller buffer can run out more often. An hourglass appears while the player refills the buffer."
+  },
+  "ProxyTitle": {
+    "message": "Quality proxy (experimental)"
+  },
+  "ProxyExplanation": {
+    "message": "Route Weave playback-token and master-playlist requests through your proxy. Video segments and Twitch chat use their normal route. Support for higher quality depends on the proxy exit region and the stream."
+  },
+  "ProxyEnable": {
+    "message": "Enable the quality proxy"
+  },
+  "ProxyAddress": {
+    "message": "HTTP or HTTPS proxy address, without a login or password"
+  },
+  "ProxyPrivacy": {
+    "message": "The proxy operator can see your IP address, destination domains and connection metadata. HTTPS protects request contents. Proxied token requests use an anonymous playback session. Account-restricted streams may be unavailable. Use a server whose operator permits this use."
+  },
+  "ProxyFailure": {
+    "message": "If the proxy fails, playback can stop. Disable this setting to return to your normal route. Reload open Weave players after saving."
+  },
+  "ProxySave": {
+    "message": "Save"
+  },
+  "ProxyInvalid": {
+    "message": "Enter an http:// or https:// proxy address without credentials, a path, or query parameters."
+  },
+  "ProxyDenied": {
+    "message": "Firefox did not grant proxy access. The settings were not saved."
+  },
+  "ProxySaved": {
+    "message": "Saved. Reload open Weave players. This does not verify the proxy connection."
+  },
+  "ProxySaveError": {
+    "message": "Could not save proxy settings."
   }
 }

@@ -4951,6 +4951,7 @@ const м_Twitch = (() => {
 	let _сИдТрансляции = '';
 	let _сАдресЗаписи = '';
 	let _сИдУстройства = '';
+	let proxyDeviceId = '';
 	let _сИдЗрителя = '';
 	let _сКодЗрителя = '';
 	let _сТокенЗрителя = '';
@@ -4989,7 +4990,7 @@ const м_Twitch = (() => {
 		}
 		return сРезультат;
 	}
-	function отправитьЗапросGql(оОтменаОбещания, сЗапрос, оПеременные, лПосылатьТокенЗрителя, лПовторятьЗапрос, сНазваниеЗагрузки, чЗагружатьНеДольше = ЗАГРУЖАТЬ_GQL_НЕ_ДОЛЬШЕ) {
+	function отправитьЗапросGql(оОтменаОбещания, сЗапрос, оПеременные, лПосылатьТокенЗрителя, лПовторятьЗапрос, сНазваниеЗагрузки, чЗагружатьНеДольше = ЗАГРУЖАТЬ_GQL_НЕ_ДОЛЬШЕ, isPlaybackToken = false) {
 		const ПОВТОРЯТЬ_ЗАПРОС_ЧЕРЕЗ = 5e3;
 		Проверить(ЭтоНепустаяСтрока(_сИдУстройства));
 		if (оПеременные !== null) {
@@ -5001,7 +5002,14 @@ const м_Twitch = (() => {
 			'Content-Type': 'text/plain; charset=UTF-8',
 			'X-Device-ID': _сИдУстройства
 		};
-		if (лПосылатьТокенЗрителя && _сТокенЗрителя) {
+		const proxyToken = isPlaybackToken && м_Настройки.Получить('qualityProxyEnabled') &&
+			WeaveQualityProxy.parseAddress(м_Настройки.Получить('qualityProxyUrl'));
+		if (proxyToken) {
+			proxyDeviceId ||= crypto.randomUUID().replaceAll('-', '');
+			оЗаголовкиЗапроса['X-Device-ID'] = proxyDeviceId;
+			оЗаголовкиЗапроса[WeaveQualityProxy.marker] = '1';
+		}
+		if (!proxyToken && лПосылатьТокенЗрителя && _сТокенЗрителя) {
 			оЗаголовкиЗапроса.Authorization = `OAuth ${_сТокенЗрителя}`;
 		}
 		return м_Загрузчик.Загрузить(оОтменаОбещания, 'POST', 'https://gql.twitch.tv/gql', чЗагружатьНеДольше, оЗаголовкиЗапроса, сЗапрос, сНазваниеЗагрузки, true, 'json').then(оРезультат => {
@@ -5075,7 +5083,7 @@ const м_Twitch = (() => {
 			login: _сКодКанала,
 			playerType: лБезРекламы ? 'picture-by-picture' : 'site',
 			disableHTTPS: false
-		}, true, true, `токен трансляции ${+лБезРекламы}`).then(оРезультат => {
+		}, true, true, `токен трансляции ${+лБезРекламы}`, ЗАГРУЖАТЬ_GQL_НЕ_ДОЛЬШЕ, true).then(оРезультат => {
 			const сТокен = цепочка(оРезультат.data, 'streamPlaybackAccessToken', 'value');
 			const сПодпись = цепочка(оРезультат.data, 'streamPlaybackAccessToken', 'signature');
 			if (!ЭтоНепустаяСтрока(сТокен) || !ЭтоНепустаяСтрока(сПодпись)) {

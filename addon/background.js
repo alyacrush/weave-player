@@ -10,15 +10,17 @@ for (const option of Object.keys(chrome.webRequest.OnBeforeSendHeadersOptions)) 
 }
 
 chrome.webRequest.onBeforeSendHeaders.addListener(request => {
+	const cleanedHeaders = WeaveQualityProxy.cleanHeaders(request.requestHeaders || [],
+		WeaveQualityProxy.requestKind(request, chrome.runtime.getURL('player.html')) === 'token');
 	if (request.frameId !== 0 || request.parentFrameId !== -1) {
-		return;
+		return {requestHeaders: cleanedHeaders};
 	}
 	const initiator = request.initiator || request.originUrl || request.documentUrl;
 	if (!initiator || !initiator.startsWith(chrome.runtime.getURL('').slice(0, -1))) {
-		return;
+		return {requestHeaders: cleanedHeaders};
 	}
 	const remove = [ 'origin', 'referer' ];
-	const requestHeaders = request.requestHeaders.filter(({name}) => !remove.includes(name.toLowerCase()));
+	const requestHeaders = cleanedHeaders.filter(({name}) => !remove.includes(name.toLowerCase()));
 	requestHeaders.push({
 		name: 'Origin',
 		value: 'https://www.twitch.tv'
