@@ -77,6 +77,11 @@ html.weave-embedded-player body {
 }
 
 @container (max-width: 540px) {
+	.нижняя {
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+
 	.нижняя .элементпанели {
 		padding-inline: .25rem;
 	}
@@ -98,12 +103,7 @@ html.weave-embedded-player body {
 	}
 }
 
-@container (max-width: 360px) {
-	.нижняя {
-		overflow-x: auto;
-		scrollbar-width: none;
-	}
-
+@container (max-width: 460px) {
 	.нижняя .кнопка {
 		width: 1.625rem;
 	}
