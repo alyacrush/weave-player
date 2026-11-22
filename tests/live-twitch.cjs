@@ -100,6 +100,7 @@ async function checkControls(page, origin, channel, report) {
 			await frame.locator('video').click();
 			await frame.locator('[id="переключитьполноэкранный"]').click();
 			await frame.waitForFunction(() => !!document.fullscreenElement, null, {timeout: 5000});
+			await frame.locator('video').click();
 			await frame.locator('[id="переключитьполноэкранный"]').click();
 			await frame.waitForFunction(() => !document.fullscreenElement, null, {timeout: 5000});
 		}],

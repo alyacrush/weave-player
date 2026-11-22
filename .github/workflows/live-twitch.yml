@@ -4,7 +4,7 @@ on:
     inputs:
       channels:
         description: Up to three comma-separated channel logins
-        default: stariy_bog,madarapoe
+        default: madarapoe,melharucos
         required: true
   push:
     branches: [feature/chrome-mv3]
@@ -31,7 +31,7 @@ jobs:
           python-version: '3.12'
       - name: Inspect live playback in a disposable browser
         env:
-          WEAVE_LIVE_CHANNELS: ${{ inputs.channels || 'stariy_bog,madarapoe' }}
+          WEAVE_LIVE_CHANNELS: ${{ inputs.channels || 'madarapoe,melharucos' }}
         run: |
           npm install --prefix "$RUNNER_TEMP/weave-browser-tests" --no-package-lock --no-audit --no-fund playwright@1.62.1
           export PLAYWRIGHT_MODULE="$RUNNER_TEMP/weave-browser-tests/node_modules/playwright"
