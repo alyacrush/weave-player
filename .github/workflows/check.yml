@@ -1,11 +1,5 @@
 name: Check and package
 on:
-  push:
-    branches:
-      - main
-      - 'release/**'
-      - feature/chrome-mv3
-  pull_request:
   workflow_dispatch:
 
 permissions:

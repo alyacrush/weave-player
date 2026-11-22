@@ -1,5 +1,7 @@
 # Chrome Web Store submission
 
+Archived on 22 November 2026. Chrome publication and active development have been discontinued. The following draft is retained for anyone who resumes the legacy port.
+
 ## Release candidate
 
 Use the Chrome ZIP produced by `python scripts/build_chrome.py` from the tested release commit. The ZIP must contain manifest.json at its root. The Firefox XPI and source ZIP are separate packages.

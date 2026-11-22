@@ -1,5 +1,7 @@
 # Weave Player for Twitch
 
+This branch preserves the legacy Chrome Manifest V3 port. Chrome development and Chrome Web Store publication were discontinued on 22 November 2026. The code, build scripts and tests remain available for anyone who wants to maintain the port. Active development focuses on Firefox.
+
 Weave is a live Twitch player for desktop Firefox 140 and later, with a Chrome Manifest V3 build. It lets you
 adjust buffering and replay the part of a stream already in the buffer.
 
@@ -29,9 +31,9 @@ For development, open `about:debugging#/runtime/this-firefox`. Select
 **Load Temporary Add-on…**, then select `addon/manifest.json`. Firefox removes
 the temporary installation when it restarts.
 
-## Try the Chrome preview
+## Build the legacy Chrome version
 
-The Chrome build is being prepared for Chrome Web Store review. A store installation link will be added when the listing is public.
+The Chrome build is unmaintained and is available from source. It has no Chrome Web Store listing.
 
 For development, run `python scripts/build_chrome.py`, extract the ZIP from `dist/`, then open `chrome://extensions`. Enable **Developer mode**, select **Load unpacked**, and choose the extracted folder.
 

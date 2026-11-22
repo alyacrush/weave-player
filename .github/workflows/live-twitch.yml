@@ -6,11 +6,6 @@ on:
         description: Up to three comma-separated channel logins
         default: madarapoe,melharucos
         required: true
-  push:
-    branches: [feature/chrome-mv3]
-    paths:
-      - tests/live-twitch.cjs
-      - .github/workflows/live-twitch.yml
 
 permissions:
   contents: read
