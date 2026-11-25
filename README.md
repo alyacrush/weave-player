@@ -3,13 +3,6 @@
 Weave is a live Twitch player for desktop Firefox 140 and later. It lets you
 adjust buffering and replay the part of a stream already in the buffer.
 
-## Legacy Chrome version
-
-Chrome development and Chrome Web Store publication have been discontinued.
-The [legacy Chrome branch](https://github.com/alyacrush/weave-player/tree/legacy/chrome-mv3)
-preserves the source, build scripts and tests for anyone who wants to maintain the port.
-Active development focuses on Firefox.
-
 ## Watch a stream
 
 Open a live channel on Twitch. Use the controls next to **W** to choose a mode.
@@ -26,13 +19,12 @@ service or automatic report upload.
 Weave connects to Twitch and its media servers for playback. Twitch handles
 sign-in and chat. See the [privacy notes](PRIVACY.md) for details.
 
-## Try the Firefox preview
+## Install a signed Firefox package
 
-Mozilla signed the earlier `2026.11.19.5` preview for self-distribution. If you have the
-signed `.xpi`, open `about:addons`. Open the gear menu and select
-**Install Add-on From File…**. Select the `.xpi`.
+Open `about:addons`. Open the gear menu and select **Install Add-on From File…**.
+Select the Mozilla-signed `.xpi`.
 
-To try the source, open `about:debugging#/runtime/this-firefox`. Select
+For development, open `about:debugging#/runtime/this-firefox`. Select
 **Load Temporary Add-on…**, then select `addon/manifest.json`. Firefox removes
 the temporary installation when it restarts.
 
@@ -46,6 +38,18 @@ python scripts/build.py
 ```
 
 The build writes an unsigned `.xpi` and its SHA-256 checksum to `dist/`.
+
+## Repository layout
+
+- `addon/` contains the Firefox extension and its bundled source and license files.
+- `scripts/` builds and checks the extension.
+- `tests/` contains regression tests and synthetic media fixtures.
+- `assets/` contains the Mozilla listing icon.
+- `docs/PROVENANCE.md` records the origin of the code.
+
+Chrome development and store publication ended on 22 November 2026. The
+[legacy Chrome branch](https://github.com/alyacrush/weave-player/tree/legacy/chrome-mv3)
+preserves its source, build scripts and tests. Firefox is the maintained version.
 
 ## Report a problem
 
