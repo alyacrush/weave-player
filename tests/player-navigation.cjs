@@ -84,9 +84,56 @@ async function main() {
 		await standalone.waitForURL('https://www.twitch.tv/directory/following');
 		console.log('PASS: embedded player menu links, keyboard replay link, and standalone navigation');
 		await checkLocalization(browser);
+		await checkProxySettings(browser);
 	} finally {
 		await browser.close();
 	}
+}
+
+async function checkProxySettings(browser) {
+	for (const lang of ['en', 'ru']) {
+		const catalog = JSON.parse(fs.readFileSync(`addon/_locales/${lang}/messages.json`, 'utf8'));
+		const context = await browser.newContext();
+		try {
+			await context.addInitScript(messages => {
+				window.proxyFixture = {allow: false, requests: 0, writes: []};
+				window.chrome = {i18n: {getMessage: key => messages[key]?.message || ''}};
+				window.browser = {
+					storage: {local: {get: async () => ({}), set: async value => {window.proxyFixture.writes.push(value);}}},
+					permissions: {request: async () => {window.proxyFixture.requests++; return window.proxyFixture.allow;}}
+				};
+			}, catalog);
+			await context.route('https://weave.example.test/*', route => {
+				const name = new URL(route.request().url()).pathname.slice(1);
+				return route.fulfill({contentType: name.endsWith('.html') ? 'text/html' : name.endsWith('.css') ? 'text/css' : 'text/javascript',
+					body: fs.readFileSync('addon/' + name, 'utf8')});
+			});
+			const page = await context.newPage();
+			await page.goto('https://weave.example.test/proxy-settings.html');
+			assert.equal(await page.title(), catalog.ProxyTitle.message);
+			assert.equal(await page.locator('#enabled').isChecked(), false);
+			await page.locator('#enabled').check();
+			await page.locator('#address').fill('http://proxy.example:3128/path');
+			await page.getByRole('button', {name: catalog.ProxySave.message, exact: true}).click();
+			assert.equal(await page.locator('#status').textContent(), catalog.ProxyInvalid.message);
+			assert.equal(await page.evaluate(() => window.proxyFixture.requests), 0);
+			await page.locator('#address').fill('http://proxy.example:3128');
+			await page.getByRole('button', {name: catalog.ProxySave.message, exact: true}).click();
+			assert.equal(await page.locator('#status').textContent(), catalog.ProxyDenied.message);
+			assert.equal(await page.evaluate(() => window.proxyFixture.writes.length), 0);
+			await page.evaluate(() => {window.proxyFixture.allow = true;});
+			await page.getByRole('button', {name: catalog.ProxySave.message, exact: true}).click();
+			assert.equal(await page.locator('#status').textContent(), catalog.ProxySaved.message);
+			assert.equal(await page.evaluate(() => window.proxyFixture.writes.at(-1).qualityProxyEnabled), true);
+			await page.locator('#enabled').uncheck();
+			await page.getByRole('button', {name: catalog.ProxySave.message, exact: true}).click();
+			assert.equal(await page.evaluate(() => window.proxyFixture.writes.at(-1).qualityProxyEnabled), false);
+			assert.equal(await page.evaluate(() => window.proxyFixture.requests), 2);
+		} finally {
+			await context.close();
+		}
+	}
+	console.log('PASS: localized proxy settings validate addresses, preserve denial and save only after permission');
 }
 
 
@@ -146,6 +193,7 @@ async function checkPlayerLanguage(document, lang, catalog) {
 	await document.evaluate(() => м_i18n.TranslateDocument(window.document));
 	assert.equal(await document.locator('html').getAttribute('lang'), lang);
 	assert.equal(await document.locator('[data-i18n="F0682^A0682"]').textContent(), catalog.F0682.message);
+	assert.equal(await document.locator('a[href="proxy-settings.html"]').textContent(), catalog.ProxyTitle.message);
 	assert.equal(await document.locator('[data-i18n="^StatTip01"]').getAttribute('title'), catalog.StatTip01.message);
 }
 

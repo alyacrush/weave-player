@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Weave</title>
+<link rel="stylesheet" href="proxy-settings.css">
+<script src="common.js" defer></script>
+<script src="quality-proxy.js" defer></script>
+<script src="proxy-settings.js" defer></script>
+<h1 data-i18n="ProxyTitle"></h1>
+<p data-i18n="ProxyExplanation"></p>
+<form>
+<label><input id="enabled" type="checkbox"> <span data-i18n="ProxyEnable"></span></label>
+<label for="address" data-i18n="ProxyAddress"></label>
+<input id="address" type="url" placeholder="http://proxy.example:3128" autocomplete="off" spellcheck="false">
+<p data-i18n="ProxyPrivacy"></p>
+<p data-i18n="ProxyFailure"></p>
+<button type="submit" data-i18n="ProxySave"></button>
+</form>
+<p id="status" role="status"></p>
+</html>
