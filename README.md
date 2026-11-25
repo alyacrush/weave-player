@@ -1,11 +1,19 @@
 # Weave Player for Twitch
 
+<img src="assets/weave-mozilla-icon.png" alt="Weave logo" width="80" height="80">
+
 Weave is a live Twitch player for desktop Firefox 140 and later. It lets you
 adjust buffering and replay the part of a stream already in the buffer.
 
+[Install from Firefox Add-ons](https://addons.mozilla.org/firefox/addon/weave-player-for-twitch/)
+
+Available in English and Russian. Requires desktop Firefox 140 or later.
+
 ## Watch a stream
 
-Open a live channel on Twitch. Use the controls next to **W** to choose a mode.
+Open a live channel on Twitch. Use the mode controls next to **W**, or right-click
+**W** to cycle through the modes. On a live channel, left-click **W** to launch
+the selected mode. In **Off** mode, Twitch keeps its own player.
 
 - **Player on Twitch** replaces the video player and keeps Twitch chat on the channel page.
 - **Standalone Weave page** opens the stream on its own page. Use the chat button to show Twitch chat next to the video.
@@ -17,12 +25,10 @@ Weave keeps settings and diagnostic reports on your device. It has no analytics
 service or automatic report upload.
 
 Weave connects to Twitch and its media servers for playback. Twitch handles
-sign-in and chat. See the [privacy notes](PRIVACY.md) for details.
+sign-in and chat. Automatic Channel Points bonus claims are optional and off by
+default. See the [privacy notes](PRIVACY.md) for details.
 
-## Install a signed Firefox package
-
-Open `about:addons`. Open the gear menu and select **Install Add-on From File…**.
-Select the Mozilla-signed `.xpi`.
+## Development installation
 
 For development, open `about:debugging#/runtime/this-firefox`. Select
 **Load Temporary Add-on…**, then select `addon/manifest.json`. Firefox removes

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.11.25.1
+
+- Use the Weave PNG icon in extension metadata and on the About page.
+
 ## 2026.11.21.1 — Firefox release candidate
 
 - Remove ad event reports and automatic channel points clicks.
