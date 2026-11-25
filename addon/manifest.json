@@ -16,12 +16,12 @@
   },
   "name": "Weave Player for Twitch",
   "short_name": "Weave",
-  "version": "2026.11.21.5",
+  "version": "2026.11.25.1",
   "description": "__MSG_M0001__",
   "icons": {
     "16": "manifest-small.svg",
     "32": "manifest-small.svg",
-    "128": "manifest.svg"
+    "128": "manifest.png"
   },
   "author": "alyacrush",
   "default_locale": "en",
